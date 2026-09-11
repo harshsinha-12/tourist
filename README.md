@@ -1,5 +1,7 @@
 # Self-Improving Cloud Coding Agent - Tourist
 
+![Pixel-Art Software Development Island City](./Pixel-Art%20Software%20Development%20Island%20City.png)
+
 > A persistent cloud engineering environment where AI agents understand your codebase, remember how you work, build their own tools, learn from experience, and ship code through GitHub.
 
 > **Status:** Early development / experimental.
