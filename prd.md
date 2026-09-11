@@ -1203,6 +1203,50 @@ agent.completed
 
 This event model powers both observability and visualization.
 
+The visualization layer consumes these events and translates them into world actions.
+
+For example:
+
+```text
+agent.spawned
+    → character appears at Command Center
+
+file.read
+    → agent visits building
+
+file.editing
+    → construction site activates
+
+tool.created
+    → Tool Workshop animation
+
+test.started
+    → Testing Facility activates
+
+branch.pushed
+    → cargo moves toward port
+
+pr.created
+    → ship departs harbor
+
+pr.updated
+    → additional cargo / construction activity
+
+pr.merged
+    → ship arrival / project completion animation
+
+This creates a strict separation between:
+
+Agent Runtime
+    ↓
+Structured Events
+    ↓
+World State
+    ↓
+Visual Animation
+
+The frontend should never infer engineering activity from terminal text.
+
 ---
 
 # 24. Queue / Workflow Infrastructure
