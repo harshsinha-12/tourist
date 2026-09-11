@@ -1442,6 +1442,46 @@ Later on, what we can also do is integrate another image generation or some kind
 - JS will have a different design of building
 - and so on for everything else
 
+
+---
+
+### 2. Immediately after that, add a subsection for the living city
+
+This is the bit about **agents, ships, ports, cranes, background movement, etc.**
+
+```md
+## Living World and Ambient Activity
+
+The repository city should behave like a living environment rather than a static code map.
+
+Agents are represented as characters moving through the world and interacting with the structures corresponding to the files, modules, tools, or services they are currently working with.
+
+Different agent roles can have distinct visual identities.
+
+Examples:
+
+```text
+Planner Agent
+    → Architect / strategist character
+
+Coding Agent
+    → Engineer / builder
+
+Research Agent
+    → Researcher
+
+Testing Agent
+    → QA / testing specialist
+
+Review Agent
+    → Inspector
+
+Tool Builder Agent
+    → Mechanic / workshop engineer
+
+Integration Agent
+    → Harbor / logistics operator
+
 ---
 
 # 27. Rendering Performance
