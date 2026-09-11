@@ -1357,6 +1357,41 @@ Merge
 Project completed
 ```
 
+## Visual Art Direction
+
+The repository world should use a stylized **isometric pixel-art / low-poly game aesthetic**, inspired by city-building and strategy games such as Clash of Clans, while remaining visually distinct and purpose-built for software development.
+
+The goal is not to create a static visualization of a repository. The world should feel alive and continuously react to engineering activity.
+
+Each repository is represented as a persistent island or city.
+
+```text
+Repository
+    ↓
+Island / City
+
+Major folder
+    ↓
+Sector
+
+Subdirectory
+    ↓
+District
+
+File
+    ↓
+Building
+
+Shared infrastructure
+    ↓
+Special-purpose structures
+
+Agent
+    ↓
+Character / Worker
+
+
+
 ---
 
 # 27. Rendering Performance
