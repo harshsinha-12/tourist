@@ -1482,6 +1482,45 @@ Tool Builder Agent
 Integration Agent
     → Harbor / logistics operator
 
+
+The system should visualize agent activity through animations.
+
+Agent starts editing file
+    → walks toward corresponding building
+
+File modification
+    → crane / construction animation
+
+New file
+    → new building rises
+
+Deleted file
+    → building demolition
+
+Tests running
+    → activity at Testing Facility
+
+Tests passing
+    → success animation / lights
+
+Tests failing
+    → warning animation
+
+Tool creation
+    → agent enters Tool Workshop
+
+Tool successfully registered
+    → new equipment / structure appears
+
+Pull request creation
+    → cargo prepared at harbor
+
+Branch push / PR update
+    → ship departs from port
+
+PR merged
+    → ship arrives / construction completes
+
 ---
 
 # 27. Rendering Performance
