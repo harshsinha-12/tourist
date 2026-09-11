@@ -1521,6 +1521,24 @@ Branch push / PR update
 PR merged
     → ship arrives / construction completes
 
+The environment should also contain ambient background activity that makes the world feel persistent and alive even when the user is not directly interacting with it.
+
+Examples:
+
+ships moving between repository ports
+small service vehicles travelling between sectors
+cranes operating around actively edited files
+agents walking between buildings
+boats arriving when remote Git activity occurs
+lights switching on in active buildings
+background traffic following dependency relationships
+ports becoming active during GitHub synchronization
+weather, water, vegetation, or subtle environmental animation
+
+These animations should be driven by actual system state whenever possible rather than being purely decorative.
+
+The visual world therefore acts as a realtime representation of the engineering system itself.
+
 ---
 
 # 27. Rendering Performance
