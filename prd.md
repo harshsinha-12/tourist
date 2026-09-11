@@ -17,7 +17,7 @@ Build a persistent cloud software-engineering environment where users connect a 
 
 The long-term product is not merely a coding assistant.
 
-It is a persistent, self-improving cloud engineering organization.
+It is a persistent, self-improving cloud engineering organization. The repository is presented as a persistent, game-like software world with isometric pixel-art-inspired visuals, where agents visibly move between sectors, construct and modify buildings representing code, create tools in workshops, run tests in dedicated facilities, and ship completed work through animated GitHub ports. 
 
 ---
 
