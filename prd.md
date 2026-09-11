@@ -1422,7 +1422,25 @@ Database
 CI/CD
     → Industrial / Deployment Zone
 
+Buildings should not all look identical. Their visual appearance can encode useful information such as:
 
+programming language
+file type
+file size
+directory
+importance / centrality
+recent activity
+test coverage
+change frequency
+current agent activity
+
+The visualization should remain understandable even when the repository contains thousands of files.
+
+Later on, what we can also do is integrate another image generation or some kind of agent which will design the building as per the file itself. If we don't have that kind of mapping or something in the database or codebase for different kinds of buildings, maybe:
+- TypeScript will have a different design of building
+- Python will have a different design of building
+- JS will have a different design of building
+- and so on for everything else
 
 ---
 
