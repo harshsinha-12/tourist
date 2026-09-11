@@ -1390,6 +1390,38 @@ Agent
     ↓
 Character / Worker
 
+Different parts of the engineering system can have recognizable landmarks.
+
+Main repository / orchestration
+    → Command Center
+
+Code-heavy sector
+    → Construction District
+
+Testing infrastructure
+    → Testing Facility
+
+Memory system
+    → Archive / Data Center
+
+Tool Registry
+    → Tool Workshop
+
+Research agents
+    → Research Lab
+
+Review agents
+    → Review Center
+
+Git / PR workflow
+    → Harbor / Port
+
+Database
+    → Data Center
+
+CI/CD
+    → Industrial / Deployment Zone
+
 
 
 ---
