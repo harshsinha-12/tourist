@@ -496,6 +496,8 @@ Vector search should complement code intelligence, not replace it.
 
 # 10. Multi-Agent Architecture
 
+**Prerequisite:** Single-Agent PR Loop Gate (Gate A in §36) must be green. Multi-agent is an amplifier, not a substitute for a reliable solo coding loop. Until Gate C, default topology remains `solo_coder` (optionally `coder_tester`).
+
 Agents are specialists.
 
 ```text
@@ -671,9 +673,208 @@ framework behaviour
 successful repair patterns
 tool-use patterns
 general engineering knowledge
+anti-patterns that repeatedly fail
 ```
 
-Only high-confidence sanitized information should graduate here.
+Global Memory is **not** a dump of successful run notes. It is a **graduated, sanitized, evidence-backed** store. Nothing enters Global Memory without passing the promotion pipeline defined below and in §21.
+
+**Default posture: reject.** Candidates start denied. Promotion is earned.
+
+### What may become Global Memory
+
+```text
+strategy          e.g. flaky React timer isolation before rewriting assertions
+tool_pattern      e.g. when analysing Prisma drift, prefer schema-diff-tool
+debug_playbook    e.g. shadow-DB migrate failure checklist
+anti_pattern      e.g. full agent swarm for ≤50 LOC bugfixes wastes cost
+```
+
+### What must never become Global Memory
+
+```text
+user preferences          → User Memory
+repo-specific architecture → Codebase Memory
+raw diffs / customer code  → never
+secrets, PII, private URLs → never
+single-run anecdotes       → stay Episodic until evidence accumulates
+```
+
+### Memory record shape (all scopes)
+
+Every memory row should carry:
+
+```text
+memory_id
+scope                # user | codebase | global | episodic | procedural
+type                 # strategy | tool_pattern | debug_playbook | anti_pattern | convention | decision | ...
+content              # short, actionable text
+content_hash         # hash of normalized content (dedupe)
+abstraction_score    # 0..1 how repo-agnostic the text is
+embedding_ref
+confidence           # 0..1
+evidence_trajectory_ids[]
+supporting_repo_ids[]
+reuse_count
+success_attribution  # retrieved and run beat baseline
+failure_attribution  # retrieved and run underperformed
+status               # candidate | active | archived | rejected
+reject_reasons[]     # if rejected / not promoted
+created_at
+updated_at
+promoted_at
+policy_version_at_write
+```
+
+### Sanitization logic (deterministic gates + LLM assist)
+
+Extraction may use a cheap model. **Acceptance is rule-based.** The model proposes; the sanitizer decides.
+
+```text
+INPUT:
+  raw_candidate_text
+  source_trajectory_ids[]
+  source_repo_ids[]
+
+STEP 1 — Hard reject scanners (no LLM override)
+  if matches secret patterns (API keys, tokens, private keys) → REJECT
+  if matches PII patterns (emails, phone, auth cookies) → REJECT or mandatory redact;
+      if redaction destroys meaning → REJECT
+  if contains private hostnames / internal URLs → REJECT
+  if contains raw source dumps (> N lines of code) → REJECT
+  if contains customer proprietary identifiers that cannot be generalized → REJECT
+
+STEP 2 — Scope classifier (LLM ok, but output enum only)
+  classify content → one of:
+    user_preference
+    repo_specific_fact
+    episodic_anecdote
+    global_strategy
+    garbage / too_vague
+  route:
+    user_preference     → User Memory path (never global)
+    repo_specific_fact  → Codebase Memory path (never global)
+    episodic_anecdote   → stay episodic (no promote yet)
+    garbage             → REJECT
+    global_strategy     → continue
+
+STEP 3 — Generalization rewrite (LLM ok)
+  rewrite content to remove:
+    - absolute file paths
+    - repo / org names
+    - ticket ids, PR numbers
+    - environment-specific values
+  require output form:
+    WHEN <situation>
+    DO <actionable steps>
+    AVOID <anti-pattern>   # optional
+  compute abstraction_score:
+    + presence of WHEN/DO structure
+    + absence of proper nouns / paths
+    + cross-language generality where claimed
+  if abstraction_score < 0.7 → REJECT for global (may keep as codebase/episodic)
+
+STEP 4 — Dedup + contradiction
+  embed sanitized content
+  if cosine_sim ≥ 0.92 with existing active/candidate global → MERGE evidence, do not create duplicate
+  if contradicts higher-confidence active memory → mark conflict; do not auto-promote
+
+STEP 5 — Emit candidate
+  status = candidate
+  store sanitizer report: { scanners, scope, abstraction_score, rewrite_diff }
+```
+
+Only `status=candidate` rows with a clean sanitizer report may enter the promotion evaluator.
+
+### Promotion logic
+
+Promotion is a scheduled job (and/or post-trajectory hook), not an inline agent side-effect.
+
+```text
+FOR each global candidate C:
+
+  evidence = trajectories where
+    C was derived from that run
+    OR C.id ∈ derived_labels.useful_memories
+    OR precursor episodic memory was useful and C is its generalization
+
+  stats:
+    n_traj   = |evidence|
+    n_repos  = |unique repo_id in evidence|
+    mean_R   = mean(reward.total for evidence with formula_version=current)
+    success  = fraction(evidence with tests_ok AND (pr_merged OR user_accepted OR ci_ok))
+    age_ok   = now - C.created_at ≥ min_age   # avoid promote-on-sight
+
+  PROMOTE to active IFF ALL:
+    C.sanitizer.passed
+    C.type ∈ { strategy, tool_pattern, debug_playbook, anti_pattern }
+    C.abstraction_score ≥ 0.7
+    n_traj  ≥ 3
+    n_repos ≥ 2
+    mean_R  ≥ threshold_T          # e.g. aligned with reward_v1 “good run”
+    success ≥ 0.66
+    age_ok
+    no open contradiction with higher-confidence active memory
+    (optional early V1) audit_flag != blocked
+
+  ON PROMOTE:
+    status = active
+    confidence = f(n_traj, n_repos, mean_R, success, abstraction_score)
+    promoted_at = now
+    index into Qdrant global collection
+
+  ELSE:
+    keep candidate OR reject with reject_reasons[]
+```
+
+### Retrieval rules (prevent pollution at read time)
+
+Even active global memories can pollute if over-retrieved.
+
+```text
+ONLY retrieve memories where:
+  status == active
+  confidence ≥ min_retrieve_confidence
+
+ALWAYS:
+  bind each retrieved memory_id into trajectory.decisions.memory_pack
+  enforce token budget for memory_pack (Context Engine)
+  prefer higher confidence × relevance / token_cost
+
+NEVER:
+  inject all global memories
+  retrieve archived / rejected / candidate into the agent prompt
+  retrieve global memories that failed sanitizer re-check
+```
+
+### Demotion / decay logic
+
+```text
+WHEN memory M was in memory_pack AND run underperforms baseline for same task_features:
+  failure_attribution++
+  confidence ← confidence * 0.85   # or subtract fixed δ
+
+WHEN memory M was in memory_pack AND run beats baseline:
+  success_attribution++
+  confidence ← min(1, confidence + ε)
+
+IF confidence < archive_threshold OR failure_attribution ≥ 3 * success_attribution:
+  status = archived
+  remove from retrieval index (keep row for audit)
+
+IF stronger contradictory memory is promoted:
+  supersede M; link superseded_by; archive M
+```
+
+### Anti-pollution invariants
+
+```text
+1. Agents cannot write directly to Global Memory.
+2. Only the graduation service can set scope=global AND status=active.
+3. Every active global memory has ≥ 2 repo evidence ids.
+4. Every retrieval is attributable on a trajectory.
+5. Archived memories are never silently reactivated without re-running promotion.
+6. Re-sanitize periodically; if scanners improve, re-scan actives and demote failures.
+```
 
 ## Episodic Memory
 
@@ -845,6 +1046,10 @@ A graph database sounds cool, but relational adjacency tables are enough until g
 
 # 15. Self-Created Tools
 
+**Prerequisite:** the Single-Agent PR Loop Gate in §36 must be green.
+
+Do not invest in tool factories while the solo agent still fails basic “open a good PR” quality. Self-created tools amplify whatever quality (or chaos) already exists.
+
 Agents can access two categories:
 
 ```text
@@ -982,39 +1187,177 @@ The OpenAI Agents SDK already supports MCP servers alongside ordinary function t
 
 # 18. Learning / Reinforcement System
 
-I would **not start by training model weights**.
+Prefer precise product language:
 
-V1 learning happens outside the foundation model.
+> **Structured policy learning over trajectories**
+> (contextual bandits + retrieval credit assignment + memory graduation)
 
-For every task record:
+over vague claims that “the agent does reinforcement learning.”
+
+## Non-negotiable principles
+
+1. **Do not train foundation-model weights in V1.** Learning happens *around* the model.
+2. **Do not do online PPO against the main LLM.**
+3. **Every completed run must produce a trajectory + reward.** Incomplete learning records are treated as system bugs.
+4. **Only discrete, versioned decisions are learned.** Free-form “policy updates” are forbidden.
+5. **No policy promotion without an eval gate.** Logging alone is not learning.
+6. **Global Memory graduates under rules**, not vibes.
+
+## What the system actually learns
 
 ```text
-state
-task type
-repository metadata
-retrieved memories
-selected agents
-selected model
-tool calls
-actions
-failures
-tests
-latency
-tokens
-cost
-user feedback
-PR status
-merge status
-revert status
+Which model class?
+Which agent topology?
+Which context budget?
+Which tool pack?
+Which memory pack?
+Which stop policy?
+Which test policy?
+Which retrieved context was actually useful?   # retrieval credit
+Which memories deserve promotion / demotion? # memory graduation
 ```
 
-This becomes a trajectory.
+That is genuine reinforcement-driven adaptation without retraining GPT.
 
 ---
 
-# 19. Reward Model
+# 19. Decision Surface and Trajectory Schema
 
-Objective reward signals:
+## Decision surface
+
+The supervisor may only choose from a **fixed action space**. Each choice is logged with scores and a policy version.
+
+| Decision key       | Example actions                                              |
+| ------------------ | ------------------------------------------------------------ |
+| `model`            | `fast`, `coding`, `reasoning`                                |
+| `topology`         | `solo_coder`, `coder_tester`, `coder_tester_reviewer`, `full_pipeline` |
+| `context_budget`   | `4k`, `8k`, `16k`                                            |
+| `tool_pack`        | ordered list of tool / skill ids retrieved for the run       |
+| `memory_pack`      | ordered list of memory ids retrieved for the run             |
+| `stop_policy`      | `stop_on_green`, `max_3_retries`, `ask_human_on_second_fail` |
+| `test_policy`      | `unit_only`, `unit_lint_type`, `full_ci`                     |
+
+Adding a new decision key requires:
+
+* schema change in `packages/protocol`
+* default heuristic
+* logging support
+* eval coverage for that arm
+
+## Task features (context for bandits)
+
+```text
+task_type              # bugfix | feature | refactor | test | docs | chore
+languages[]
+approx_loc_touched_estimate
+repo_size_bucket       # S | M | L | XL
+has_ci
+has_flaky_history
+prior_failures_on_area
+user_preference_hints[]
+```
+
+## Trajectory schema (mandatory)
+
+Every run writes one immutable trajectory row (Postgres) plus large artifacts (object storage).
+
+```text
+trajectory_id
+task_id
+repo_id
+user_id
+created_at
+policy_version
+
+task_features          # see above
+
+decisions[]            # { key, action, score?, reason?, policy_version, decided_at }
+
+events_summary[]       # compact structured events (tool calls, searches, edits)
+artifact_refs[]        # transcript, patches, test logs, terminal logs in R2
+
+outcome:
+  build_ok
+  tests_ok
+  lint_ok
+  typecheck_ok
+  ci_ok                # nullable until webhook
+  security_ok          # nullable
+  pr_url
+  pr_status            # open | merged | closed | draft
+  merge_status         # pending | merged | not_merged
+  revert_status        # none | reverted
+  regressions_detected
+  files_touched[]
+  patch_size_stats
+
+costs:
+  tokens_in
+  tokens_out
+  latency_ms
+  estimated_usd
+
+human_feedback:        # nullable / delayed
+  accepted
+  rejected
+  edited
+  review_comment_count
+
+derived_labels:        # filled at end / offline
+  useful_files[]       # files that materially contributed to the fix
+  useful_tools[]
+  useful_memories[]
+  wasted_retrievals[]  # retrieved but unused / harmful
+
+reward:
+  formula_version      # e.g. reward_v1
+  total
+  components{}         # breakdown for debugging
+  finalized_at         # null until delayed signals settle
+  pending_signals[]    # e.g. ci, merge, revert
+```
+
+### Completeness rule
+
+A trajectory is **incomplete** (and should alert) if any of these are missing at end-of-run:
+
+```text
+task_features
+decisions (at least model + topology + context_budget)
+outcome.build_ok / tests_ok (or explicit skip reason)
+costs.tokens_* / latency_ms
+reward.formula_version + components
+policy_version
+```
+
+Delayed fields (`ci_ok`, merge, revert, human_feedback) update the **same** trajectory asynchronously; they must not create a second conflicting record.
+
+### Example
+
+```text
+Task: "Fix flaky React test"
+
+decisions:
+  model=coding
+  topology=coder_tester
+  context_budget=8k
+  test_policy=unit_lint_type
+
+Historical policy may later learn:
+
+  coder_tester
+  beats
+  full_pipeline
+
+because same success, ~45% lower cost, ~38% lower latency
+on task_features matching bugfix + frontend + has_flaky_history
+```
+
+---
+
+# 20. Reward Model
+
+## Objective signals
 
 ```text
 build success
@@ -1023,102 +1366,196 @@ lint success
 type-check success
 CI success
 security checks
-PR merged
-review comments
-user accepted change
-user rejected change
+PR merged / user accepted
+user rejected
 PR reverted
+regressions introduced
 tokens consumed
 wall-clock latency
-patch size
+patch size / files touched unnecessarily
 ```
 
-Example conceptual reward:
+## Versioned formula: `reward_v1`
+
+Ship the formula as **code**, not prose. Historical totals are never overwritten in place; if the formula changes, recompute offline into a new `formula_version`.
 
 ```text
-Reward =
-    + tests_passed
-    + build_success
-    + PR_merged
-    + user_acceptance
-    - regressions
-    - excessive_latency
-    - unnecessary_tokens
-    - reverted_change
+R_v1 =
+  +4.0  if tests_ok
+  +2.0  if build_ok
+  +1.0  if lint_ok AND typecheck_ok
+  +3.0  if ci_ok
+  +5.0  if pr_merged OR user_accepted
+  -5.0  if user_rejected
+  -8.0  if reverted
+  -2.0  if regressions_detected
+  -1.0  * log(1 + excess_latency_minutes)
+  -0.5  * log(1 + excess_token_units)
+  -1.0  * unnecessary_files_touched_penalty
+```
+
+Store:
+
+```text
+reward.total
+reward.components = {
+  tests_ok: 4.0,
+  build_ok: 2.0,
+  ...
+}
+```
+
+so operators can answer “why did this run score high/low?”
+
+## Delayed reward settlement
+
+```text
+t0  run ends          → provisional reward (missing CI/merge)
+t1  CI webhook        → update ci_ok, recompute components
+t2  merge / close     → update acceptance signals
+t3  revert window     → optional negative update (e.g. 7–14 days)
+t_final               → reward.finalized_at set; pending_signals empty
+```
+
+Bandit updates may use provisional reward for online exploration, but **policy promotion eval must prefer finalized trajectories** (or apply an explicit delay filter).
+
+## Retrieval credit assignment
+
+After a successful (or clearly failed) run, derive:
+
+```text
+useful_files      = files edited that tests / review depended on
+                  ∪ files heavily read immediately before correct edit
+useful_tools      = tools whose outputs changed the plan or patch
+useful_memories   = memories cited or whose content appears in decisions
+wasted_retrievals = retrieved items never read / contradicted / harmful
+```
+
+These labels train **retrieval and memory policies**, not only topology/model bandits.
+
+---
+
+# 21. Policy Learning, Gates, and Global Memory Graduation
+
+## Learning stages (with hard gates)
+
+| Stage | Mechanism | Allowed when | Promotion gate |
+| ----- | --------- | ------------ | -------------- |
+| 0 | Heuristics + full trajectory/reward logging | Always | Always on; no learning claim |
+| 1 | Contextual bandits per decision key | ≥ N finalized trajectories overall | Per-arm minimum samples + confidence interval vs baseline |
+| 2 | Offline preference pairs from trajectories | Labeled accept/reject or pairwise outcomes | Holdout preference accuracy / win rate vs heuristic |
+| 3 | Retrieval policy from useful_* labels | Stable Stage 0–1 logging | Measurable retrieval lift on eval (precision@k / tokens to success) |
+| 4 | Distill / fine-tune routers or retrievers | Clear Stage 1–3 gains | Offline + shadow beat baseline on eval suite |
+| 5 | Advanced offline RL | Substantial real trajectory volume | Explicit research review; not default product path |
+
+**Do not attempt Stage 5 until the product has substantial real-world trajectory data.**
+
+## Policy versions
+
+```text
+policy_id
+version            # monotonic
+stage              # 0..5
+decision_keys[]    # which arms this policy controls
+artifact_ref       # model weights / bandit tables / config
+created_from_eval_id
+status             # shadow | canary | active | rolled_back | archived
+```
+
+Runtime always records `policy_version` on the trajectory.
+
+## Promotion / rollback rules
+
+A candidate policy may move `shadow → canary → active` only if:
+
+```text
+1. Eval suite run completes (see below)
+2. Primary metric improves by ≥ δ OR cost/latency improves at non-worse success
+3. No severe safety regressions (secret leaks, destructive git, permission violations)
+4. Shadow traffic (optional) shows same direction as offline eval
+5. Rollback plan exists (previous active version one click away)
+```
+
+If canary success drops below baseline by ε, **automatic rollback**.
+
+## Eval harness (required before any “self-improving” claim)
+
+Maintain a fixed suite:
+
+```text
+20–50 canned tasks
+across 3–5 fixture repositories
+metrics:
+  - task success (CI-green PR or equivalent)
+  - reward_v1 mean
+  - tokens / task
+  - latency / task
+  - human preference sample (periodic)
+```
+
+Every policy change that affects decisions must:
+
+```text
+run offline eval
+  → optionally shadow
+  → only then canary/active
+```
+
+No eval harness → no RL marketing claims; only analytics.
+
+## Global Memory graduation pipeline
+
+The full sanitization, promotion, retrieval, demotion, and anti-pollution invariants live in **§12 Global Memory**.
+
+Operational summary:
+
+```text
+Episodic / procedural outcomes
+        ↓
+Candidate extractor (cheap model) — proposes only
+        ↓
+Deterministic sanitizer (scanners → scope → generalize → dedupe)
+        ↓
+global_candidates (status=candidate)
+        ↓
+Promotion job (multi-traj, multi-repo, reward, abstraction gates)
+        ↓
+Global Memory (status=active) — only graduation service can write this
+        ↓
+Budgeted retrieval + attribution on trajectory
+        ↓
+Confidence decay / archive on underperformance
+```
+
+**Agents never write Global Memory directly.**
+
+### Coupling loop (memory ↔ RL)
+
+```text
+Policy decides memory_pack / tool_pack / context
+        ↓
+Execute run
+        ↓
+Outcome + reward_v1
+        ↓
+Label useful_memories / useful_tools / useful_files
+        ↓
+Update:
+  1) bandit arms for decision keys
+  2) retrieval scores
+  3) memory confidence, promotion, demotion
+```
+
+This is the operational definition of self-improvement for Tourist:
+
+```text
+better decisions + better retrieval + stricter memory
+— not silent weight updates on the frontier model.
 ```
 
 ---
 
-# 20. Reinforcement Learning V1
 
-Do not do PPO against the main LLM.
-
-Start with learning policies around the model.
-
-Learn:
-
-```text
-Which model?
-Which tools?
-Which memories?
-How much context?
-One agent or multiple?
-Which agent topology?
-Which tests?
-When to stop?
-When to ask human?
-```
-
-A contextual bandit can already optimize these decisions.
-
-Example:
-
-```text
-Task:
-"Fix flaky React test"
-
-Historical policy learns:
-
-Coder + Tester
-beats
-Planner + Coder + Tester + Reviewer
-
-because:
-
-same success
-45% lower cost
-38% lower latency
-```
-
-That is genuine reinforcement-based adaptation without retraining GPT.
-
----
-
-# 21. RL Evolution
-
-### Stage 1
-
-Heuristics + reward collection.
-
-### Stage 2
-
-Contextual bandits.
-
-### Stage 3
-
-Offline preference learning from historical trajectories.
-
-### Stage 4
-
-Distillation / fine-tuning specialised models where beneficial.
-
-### Stage 5
-
-More advanced offline RL.
-
-Do not attempt Stage 5 until the product has substantial real-world trajectory data.
-
----
 
 # 22. GitHub Architecture
 
@@ -1323,6 +1760,8 @@ The terminal transcript is merely another consumer.
 ---
 
 # 26. 3D Visualization
+
+**Prerequisite:** Gate A (single-agent PR loop) must be green before the city is a delivery milestone. During MVP 1, ship a text event stream / run inspector first. The city visualizes real events; it must not block agent quality work (§36).
 
 ## Do not use Plotly
 
@@ -1963,93 +2402,223 @@ Perceived speed matters almost as much as absolute speed.
 
 ---
 
-# 36. MVP Scope
+# 36. MVP Scope and Quality Gates
 
 Do not build everything simultaneously.
 
-## MVP 1 - Cloud Coding Agent
+**Hard rule:** Self-created tools, multi-agent swarms, and the 3D city as a product surface must not divert engineering from a reliable single-agent PR loop. Those systems amplify quality; they do not create it.
+
+## Gate A — Single-Agent PR Loop (must pass first)
+
+Topology locked to:
+
+```text
+solo_coder
+  or
+coder_tester   # optional thin second step, still one coding agent
+```
+
+Forbidden until Gate A is green:
+
+```text
+full multi-agent topologies (planner swarms, parallel coders, integration agent)
+self-created Tool Builder / registry product work
+3D city as a primary delivery milestone
+  (event stream + simple UI inspector are allowed earlier)
+Global Memory promotion to active
+  (episodic + codebase memory logging may exist; global stays candidate-only or off)
+```
+
+### Gate A exit criteria (all required)
+
+```text
+1. Loop works end-to-end on real repos:
+   GitHub connect → BYOK → Daytona → edit/test → commit → push → open PR
+
+2. Eval suite (fixture repos, ≥ 20 tasks) with topology=solo_coder:
+   success_rate ≥ target_S          # e.g. 60%+ CI-green or accepted PR equivalent early on
+   median latency within budget
+   median tokens within budget
+
+3. Learning integrity:
+   100% of completed runs write a complete trajectory
+   reward_v1 components present
+   delayed CI/merge hooks update the same trajectory
+
+4. Safety:
+   no key leakage in logs/traces
+   sandbox credentials task-scoped
+   no destructive defaults on default branch
+
+5. Operability:
+   failures are inspectable via event stream / run inspector
+   flaky infra (sandbox/GitHub) does not masquerade as agent success
+```
+
+Until Gate A passes, roadmap language is:
+
+> Prove: "Give it a repo and issue, get a useful PR."
+
+Not:
+
+> Build the city / swarm / tool factory.
+
+## MVP 1 - Cloud Coding Agent (Gate A)
 
 Build:
 
 ```text
-GitHub login
-repository import
+GitHub App + repository import
+BYOK OpenAI key
 user task
 Daytona sandbox
-OpenAI coding agent
-file editing
-tests
-Git commits
+single coding agent
+file editing + shell + tests
+Git commits + branch push
 PR creation
-streaming logs
+streaming event log / run inspector
+trajectory + reward_v1 writers
 ```
 
-Nothing else.
+Nothing else is required for MVP 1.
 
-Prove:
+## MVP 2 - Codebase Intelligence + Scoped Memory
 
-> "Give it a repo and issue, get a useful PR."
-
-## MVP 2 - Memory
+Only after Gate A is green (or in parallel *without* blocking Gate A).
 
 Add:
 
 ```text
+repo indexing (Tree-sitter, hybrid search)
+Context Engine (discover, don't dump)
 user memory
 codebase memory
-old task history
-repo indexing
-hybrid retrieval
+episodic memory
+old task retrieval
 ```
 
-## MVP 3 - Visual World
+Global Memory extractor may invent **candidates**, but **promotion stays off** until sanitizer + multi-repo evidence rules from §12 are implemented and Gate A remains green.
 
-Add:
+## Gate B — Memory Safety
+
+Before any active Global Memory retrieval in production:
 
 ```text
-repo city
-agent character
-file activity
+sanitizer scanners live
+scope classifier routes correctly on a labeled test set
+promotion job enforces multi-traj + multi-repo gates
+retrieval budget + attribution on trajectories
+demotion path tested
+```
+
+## MVP 3 - Visual World (after events exist; after Gate A)
+
+The city **visualizes** the agent. It must not become the agent.
+
+Allowed early (during MVP 1):
+
+```text
+WebSocket events
+text activity stream
+run inspector
+```
+
+Allowed as MVP 3 only after Gate A:
+
+```text
+repo → city generation
+sectors / buildings
+agent characters driven by real events
 construction animations
-real-time event stream
+diff / file overlays
+```
+
+**Parallelization rule:** world-generator work may start once the event schema is stable, but it cannot steal people/time from Gate A failures. If Gate A regresses, city work pauses.
+
+## Gate C — Multi-Agent Readiness
+
+Unlock planner / parallel coders / integration agent only when:
+
+```text
+Gate A still green on solo baseline
+coder_tester already logged as a decision arm with trajectories
+eval shows which task_features need more than solo
+shared task memory + branch/worktree isolation exist
+topology is a logged decision key (not hard-coded swarm)
 ```
 
 ## MVP 4 - Multi-Agent
 
-Add:
+Add only after Gate C:
 
 ```text
-planner
-coder
-tester
-reviewer
-parallel workers
+supervisor topology selection
+planner / coder / researcher / tester / reviewer as needed
+parallel sandboxes when topology requires
 shared task memory
+integration agent
+```
+
+Default for simple tasks remains `solo_coder`. Swarms are opt-in by policy, not by enthusiasm.
+
+## Gate D — Tool Builder Readiness
+
+Unlock self-created tools only when:
+
+```text
+Gate A green
+built-in tools cover the common loop well
+capability-gap detection has precision (not spam)
+sandbox can test generated tools in isolation
+permission model + registry versioning exist
+dynamic tool discovery (no loading 500 schemas) exists
 ```
 
 ## MVP 5 - Tool Creation
 
-Add:
+Add only after Gate D:
 
 ```text
 capability detection
 tool builder
 sandbox validation
 tool registry
-tool reuse
+semantic tool discovery
+tool reuse with reward attribution
 ```
 
-## MVP 6 - Learning
+## MVP 6 - Learning (starts during MVP 1; deepens later)
 
-Add:
+Trajectory + `reward_v1` begin in MVP 1.
+
+Later, after Gates A–B:
 
 ```text
-trajectory collection
-reward scoring
-model selection learning
-tool selection learning
-topology learning
-memory retrieval learning
+useful_* credit assignment
+eval harness as release gate
+contextual bandits behind promotion gates
+global memory graduation (§12)
+shadow → canary → active policy versions with rollback
+```
+
+Do **not** claim self-improvement until eval gates exist.
+
+### Sequencing diagram
+
+```text
+MVP1 Gate A ─── reliable solo PR loop + trajectories
+      │
+      ├──────── MVP2 indexing + user/codebase/episodic memory
+      │              │
+      │              └─ Gate B ─ active Global Memory
+      │
+      ├──────── MVP3 city (events already flowing; Gate A holds)
+      │
+      ├──────── Gate C ─ MVP4 multi-agent
+      │
+      ├──────── Gate D ─ MVP5 tool builder
+      │
+      └──────── MVP6 bandits / retrieval learning (eval-gated)
 ```
 
 ---
@@ -2064,6 +2633,8 @@ custom Firecracker infrastructure
 graph database
 training your own LLM
 online PPO
+vague “RL” without schemas, rewards, or eval gates
+unfiltered writes into Global Memory
 10-agent swarms
 custom vector database
 custom container platform
@@ -2203,7 +2774,7 @@ Memory gives the organization continuity.
 
 Tools give it capabilities.
 
-Reinforcement gives it adaptation.
+Structured policy learning (trajectories, rewards, gates, memory graduation) gives it adaptation.
 
 GitHub gives it the ability to ship.
 
