@@ -2,7 +2,7 @@
 
 ![Pixel-Art Software Development Island City](./Pixel-Art%20Software%20Development%20Island%20City.png)
 
-> A persistent cloud engineering environment where AI agents understand your codebase, remember how you work, build their own tools, learn from experience, and ship code through GitHub.
+> A persistent, self-improving cloud engineering environment where AI agents understand your codebase, remember how you work, create new capabilities when needed, learn from experience, and ship software through GitHub.
 
 > **Status:** Early development / experimental.
 
@@ -10,43 +10,76 @@
 
 ## Overview
 
-Most coding agents today live inside a terminal or editor.
+Most coding agents today are powerful, but still largely session-oriented.
 
-They are increasingly capable at writing code, but they are still largely **session-oriented**:
+They can inspect repositories, write code, run commands, and fix bugs, but they often:
 
-* they repeatedly rediscover the same codebase
-* they forget decisions from previous tasks
-* they operate with a mostly fixed toolbox
-* they expose limited visibility into what they are doing
-* multi-agent collaboration is often difficult to inspect
-* improvements from one successful task rarely carry forward intelligently
+* rediscover the same codebase repeatedly
+* forget previous architectural decisions and failed approaches
+* operate with a mostly fixed set of tools
+* consume unnecessary context and tokens
+* have limited long-term understanding of the developer
+* provide poor visibility into autonomous work
+* fail to systematically improve from previous successful or unsuccessful tasks
 
-This project explores a different model:
+**Tourist** explores a different model:
 
-**What if your coding agent behaved more like a persistent cloud engineering organization?**
+> **What if a coding agent behaved more like a persistent, self-improving cloud engineering organization?**
 
-Connect a GitHub repository, provide an OpenAI API key, describe what you want built, and let a set of cloud agents inspect the project, plan the work, edit and test code inside isolated environments, review their own changes, and eventually raise a pull request.
+Users connect a GitHub repository, bring their own OpenAI API key, describe what they want built, and cloud agents inspect the project, retrieve relevant context and memory, plan the work, modify and test code inside isolated sandboxes, review their own changes, respond to failures, and raise pull requests.
 
-Over time, the system should become better at working with both **you** and **your codebase**.
+But execution is only one part of the system.
+
+Tourist is designed around several persistent capabilities:
+
+* **User Memory** - remembers how a developer prefers to work across projects.
+* **Codebase Memory** - learns repository architecture, conventions, previous changes, decisions, discussions, bugs, and historical agent interactions.
+* **Global Memory** - stores reusable engineering knowledge and successful patterns that can generalize across tasks.
+* **Episodic Memory** - preserves previous attempts, failures, fixes, and outcomes.
+* **Dynamic Context Discovery** - retrieves only the code, memories, tools, and historical information relevant to the current task instead of flooding the model context.
+* **Multi-Agent Engineering** - dynamically coordinates planners, coders, researchers, testers, reviewers, integration agents, and tool-building agents when useful.
+* **Self-Created Tools** - allows agents to detect missing capabilities, build and test tools inside sandboxes, register them, and reuse successful tools later.
+* **Reinforcement-Driven Learning** - uses tests, CI results, latency, token usage, user feedback, PR outcomes, failures, and reversions as reward signals to improve future decisions.
+* **Adaptive Agent Policies** - progressively learns which models, tools, memories, context, workflows, and agent topologies work best for different engineering problems.
+* **Cloud Execution** - lets agents continue working independently of the user's machine.
+* **GitHub-Native Delivery** - branches, commits, CI feedback, revisions, and pull requests are first-class parts of the system.
+* **Persistent Visual World** - turns the repository into a living software city where folders become sectors, files become buildings, agents visibly work across the codebase, tools are created in workshops, tests run in dedicated facilities, and completed work moves through animated GitHub ports.
+
+The goal is not to build another chat interface around an LLM.
+
+The goal is to build a **persistent software-engineering system that becomes faster, more context-efficient, more capable, and better at shipping software through experience**.
 
 ---
 
 ## The Idea
 
+At a high level, Tourist combines autonomous cloud execution with persistent memory, dynamic context retrieval, self-created capabilities, and reinforcement-driven improvement.
+
 ```text
-You
- │
- │ "Implement X"
- ▼
-┌───────────────────────────┐
-│      Cloud Supervisor     │
-│                           │
-│ understand → plan → route │
-└──────────────┬────────────┘
+Developer
+    │
+    │ "Implement feature X"
+    ▼
+┌──────────────────────────────┐
+│       Cloud Supervisor       │
+│                              │
+│ Understand → Retrieve → Plan │
+└──────────────┬───────────────┘
                │
-        ┌──────┼───────┐
-        ▼      ▼       ▼
-     Planner  Coder  Researcher
+               ▼
+        Context Discovery
+               │
+     ┌─────────┼─────────┐
+     ▼         ▼         ▼
+   Memory     Code      Tools
+     │         │         │
+     └─────────┼─────────┘
+               ▼
+        Agent Topology
+               │
+      ┌────────┼────────┐
+      ▼        ▼        ▼
+   Planner   Coder   Researcher
                 │
           ┌─────┴─────┐
           ▼           ▼
@@ -54,30 +87,98 @@ You
           │           │
           └─────┬─────┘
                 ▼
-           GitHub PR
+         Cloud Sandbox
+                │
+        Code / Test / Fix
+                │
+                ▼
+            GitHub PR
+                │
+                ▼
+       Outcome + Reward
+                │
+       ┌────────┴────────┐
+       ▼                 ▼
+ Update Memory      Improve Policy
 ```
 
-Behind these agents sits a persistent system for:
+Behind the agent layer sits a persistent engineering system:
 
 ```text
 Memory
 +
-Codebase intelligence
+Codebase Intelligence
 +
-Cloud execution
+Dynamic Context Discovery
 +
-Tool creation
+Cloud Execution
 +
-Learning
+Multi-Agent Coordination
 +
-GitHub integration
+Self-Created Tools
 +
-Realtime visualization
+Reinforcement Learning
++
+GitHub Integration
++
+Realtime Visualization
 ```
 
-The goal is not to build another chat interface around an LLM.
+Every completed task creates new experience.
 
-The goal is to build a **persistent, self-improving software engineering system**.
+```text
+More Tasks
+    ↓
+More Experience
+    ↓
+Better Memory
+    ↓
+Better Context Retrieval
+    ↓
+Better Tool Selection
+    ↓
+Better Agent Coordination
+    ↓
+Better Learned Policies
+    ↓
+Faster + Cheaper + Higher-Quality Coding
+```
+
+In the first versions, self-improvement happens primarily **around the foundation model**, rather than through continuous model-weight training.
+
+The system learns decisions such as:
+
+```text
+Which context should be retrieved?
+Which memories are relevant?
+Which tools should be exposed?
+Which model should handle the task?
+Does this require one agent or several?
+Which agent topology should be used?
+When should the agent retry?
+When should it create a new tool?
+When should it stop?
+When should it ask the human?
+```
+
+The repository itself is presented as a persistent software world:
+
+```text
+Repository        → Island / City
+Major folder      → Sector
+Subdirectory      → District
+File              → Building
+Agent             → Character / Worker
+Tool creation     → Workshop
+Tests             → Testing Facility
+GitHub / PR work  → Port / Harbor
+```
+
+The city is not just decorative. It is a realtime representation of what the engineering system is doing.
+
+Agents move between sectors, buildings react to code changes, tests activate dedicated facilities, tools are created in workshops, and GitHub activity appears through ports, ships, and other background movement.
+
+The visual world provides situational awareness. The memory, agent, tooling, and learning systems underneath it are what make Tourist progressively more capable.
 
 ---
 
@@ -241,7 +342,7 @@ Large outputs such as build logs and test results should remain external artifac
 
 This architecture is designed for both **speed and token efficiency**.
 
-More detail lives in [`strategy.md`](./strategy.md).
+More detail lives in [`cursor-strategy.md`](./cursor-strategy.md).
 
 ---
 
@@ -563,6 +664,18 @@ Deleted file
     ↓
 Demolition
 
+Tool creation
+    ↓
+Workshop activity
+
+Tests
+    ↓
+Testing facility activity
+
+GitHub / PR activity
+    ↓
+Port / harbor activity
+
 Pull request
     ↓
 Construction project
@@ -573,6 +686,10 @@ Completed project
 ```
 
 Users should be able to observe where agents are working instead of interpreting a wall of terminal logs.
+
+The world should feel persistent and alive. Background movement can include agents walking between sectors, cranes around files being edited, service vehicles moving between districts, ships arriving or departing during GitHub activity, and lights or traffic reflecting active dependencies.
+
+Where possible, these animations should reflect real system state instead of being purely decorative.
 
 The visualization is not intended to replace conventional developer interfaces.
 
@@ -790,8 +907,8 @@ The agent should be able to access enormous amounts of potential context without
 │   ├── tool-sdk/             # tool specification/runtime
 │   └── shared/
 │
-├── PRD.md
-├── strategy.md
+├── prd.md
+├── cursor-strategy.md
 └── README.md
 ```
 
@@ -975,8 +1092,8 @@ This project is being developed independently and is not affiliated with or endo
 
 More detailed design notes are available in:
 
-* [`PRD.md`](./PRD.md) - product requirements, architecture, infrastructure, memory design, agents, tooling, learning and roadmap
-* [`strategy.md`](./strategy.md) - context engineering, token efficiency, dynamic retrieval and coding-agent strategy
+* [`prd.md`](./prd.md) - product requirements, architecture, infrastructure, memory design, agents, tooling, learning and roadmap
+* [`cursor-strategy.md`](./cursor-strategy.md) - context engineering, token efficiency, dynamic retrieval and coding-agent strategy
 
 ---
 
@@ -1032,11 +1149,7 @@ Learning improves behaviour.
 
 GitHub is where the work ships.
 
-
-## Docs
-
-- [prd.md](./prd.md) — product requirements
-- [cursor-strategy.md](./cursor-strategy.md) — agent context strategy notes
+---
 
 ## License
 
