@@ -1684,6 +1684,21 @@ project history
 
 Only changed portions need regeneration.
 
+The persistent world should also retain higher-level engineering state.
+
+Examples:
+
+- previously completed PR projects
+- agent-created tools
+- important codebase landmarks
+- repository growth over time
+- historical activity zones
+- currently active agents
+- active branches and pull requests
+- ports associated with remote Git activity
+
+When the user returns to the application, the city should feel like the same software world they left behind rather than a newly generated visualization.
+
 ---
 
 # 30. Hosting Architecture
