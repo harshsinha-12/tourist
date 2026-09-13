@@ -2,11 +2,16 @@
 
 import { useMemo, useState } from "react";
 import type { Building, PublicReport } from "@tourist/protocol";
+import Link from "next/link";
+import { getBuildingArchetype } from "./buildings/registry";
 import { CityCanvas } from "./CityCanvas";
+import { OperationsModal, type CityOperation } from "./OperationsModal";
 
 export function TouristShell({ report }: { report: PublicReport }) {
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>();
   const [focusedAnchorId, setFocusedAnchorId] = useState<string>();
+  const [operation, setOperation] = useState<CityOperation>();
+  const [operationNotice, setOperationNotice] = useState<string>();
   const snapshot = report.snapshot;
   const selectedBuilding = useMemo(
     () => snapshot.buildings.find((building) => building.id === selectedBuildingId),
@@ -44,6 +49,7 @@ export function TouristShell({ report }: { report: PublicReport }) {
           focusedAnchorId={focusedAnchorId}
           selectedBuildingId={selectedBuildingId}
           onSelectBuilding={(building: Building) => setSelectedBuildingId(building.id)}
+          onOpenOperation={setOperation}
         />
 
         <aside className="report-card glass-panel">
@@ -77,6 +83,7 @@ export function TouristShell({ report }: { report: PublicReport }) {
               <p>{activeSection.body}</p>
             </div>
           )}
+          <Link className="gallery-link" href="/buildings">Explore the building collection ↗</Link>
         </aside>
 
         <aside className="inspector glass-panel" aria-live="polite">
@@ -84,31 +91,36 @@ export function TouristShell({ report }: { report: PublicReport }) {
             <>
               <div className="panel-kicker">CITY INSPECTOR</div>
               <h2>Choose a building</h2>
-              <p>Click any structure to inspect the file behind it, or pick a report stop to fly to its evidence.</p>
+              <p>Click any structure to inspect the file behind it, or pick a report stop to find its evidence.</p>
             </>
           )}
         </aside>
 
         <div className="world-controls glass-panel">
           <span>Select a report stop</span>
-          <span>Click a file marker</span>
-          <span>Inspect the build</span>
+          <span>Click a building</span>
+          <span>Hover a city block</span>
         </div>
+        {operationNotice && <div className="operation-notice" role="status">{operationNotice}<button type="button" onClick={() => setOperationNotice(undefined)} aria-label="Dismiss notification">×</button></div>}
+        {operation && <OperationsModal operation={operation} repositoryName={snapshot.repository.name} onClose={() => setOperation(undefined)} onDispatch={(notice) => { setOperationNotice(notice); setOperation(undefined); }} />}
       </section>
     </main>
   );
 }
 
 function BuildingDetails({ building }: { building: Building }) {
+  const { design, Component } = getBuildingArchetype(building);
   return (
     <>
       <div className="panel-kicker">BUILDING INSPECTOR</div>
+      <div className="inspector-preview"><Component design={design} building={building} /></div>
       <div className="inspector-title">
         <span className="language-swatch" style={{ backgroundColor: building.color }} />
         <h2>{building.name}</h2>
       </div>
       <code>{building.path}</code>
       <dl>
+        <div><dt>Design</dt><dd>{design.label}</dd></div>
         <div><dt>Language</dt><dd>{building.language}</dd></div>
         <div><dt>Purpose</dt><dd>{building.kind}</dd></div>
         <div><dt>Size</dt><dd>{building.linesOfCode.toLocaleString()} LOC</dd></div>
