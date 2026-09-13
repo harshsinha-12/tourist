@@ -1,9 +1,9 @@
 # Tourist — Build Plan
 
-> Working plan aligned with `prd.md` (esp. §§12, 18–21, 36), `README.md`, and `cursor-strategy.md`.
-> Last synced after PRD updates on structured learning, Global Memory graduation, and quality Gates A–D.
+> Working plan aligned with `prd.md` (esp. §§12, 18–21, 26, 36), `README.md`, and `cursor-strategy.md`.
+> Last synced for: structured learning, Global Memory gates, **City Foundation first**, and **Public Report → CitySnapshot**.
 >
-> **Goal:** ship a reliable single-agent cloud PR loop first; capture trajectories from day one; graduate memory under rules; only then amplify with city, multi-agent, tools, and bandits.
+> **Goal:** design the city early as the integration + reporting surface; run the solo agent loop in parallel until Gate A; then bind live agents, memory, multi-agent, and tools onto that world.
 
 **Source of truth for detailed schemas:** `prd.md`. This file is the execution plan.
 
@@ -15,338 +15,280 @@
 
 * Clear loop: connect repo → task → sandbox → PR → reward → improve.
 * Pragmatic stack: Daytona, OpenAI Agents SDK, Neon, Qdrant, GitHub App.
-* Dynamic context discovery is the right tenet: huge available context, tiny active context.
-* Memory scopes + structured policy learning are real differentiators.
-* 3D city is strong identity — as a visualization of a working system, not a substitute for one.
+* Dynamic context discovery: huge available context, tiny active context.
+* Memory scopes + structured policy learning.
+* **City as product identity** — strongest if it is also the reporting/integration surface, not a late skin.
 
 **Risks (constrained in PRD)**
 
 | Risk | Constraint |
 | --- | --- |
-| Too many products at once | §36 Gates A–D |
-| Vague “RL” | §§18–21 decision surface, trajectory, `reward_v1`, policy gates, eval |
-| Global memory pollution | §12 sanitizer → promote → retrieve → demote; agents cannot write active global |
-| City / swarm / tool-factory too early | Forbidden until Gate A; city pauses if Gate A regresses |
+| Too many products at once | Gates A–D; Track 0 is scoped to schema/viewer/reports first |
+| Vague “RL” | §§18–21 |
+| Global memory pollution | §12 + Gate B |
+| City polish replacing agent quality | Track 0 ≠ “live autonomous city”; Gate A still required for live claims |
+| Multi-agent / Tool Builder too early | Still blocked until Gates C / D |
 
 **Verdict**
 
-Build the spine first: **solo agent → real PR → complete trajectory + `reward_v1`**. Everything else layers on.
+Two parallel early tracks:
+
+1. **Track 0 — City Foundation + Public Reports** (design the world; reports generate cities)
+2. **MVP 1 — Solo agent → PR + trajectories** (Gate A)
+
+Then bind live agents onto the city (MVP 3), then memory depth, swarms, tools, bandits.
 
 ---
 
-## 2. Quality gates (from PRD §36)
+## 2. City-first + public reports
+
+### Why build the city early
+
+* Forces a stable **world schema** that events, PRs, tests, and agents must target — better integration later.
+* Makes Tourist demoable and branded before the agent is perfect.
+* Turns “reporting” into something tangible: **a shareable city**, not a wall of logs.
+
+### Public Report model
 
 ```text
-Gate A  Single-Agent PR Loop     ← must pass first
-  │
-  ├─ MVP2 indexing + user/codebase/episodic memory
-  │     └─ Gate B  Memory Safety → active Global Memory
-  │
-  ├─ MVP3 city (events already flowing; pause if A regresses)
-  │
-  ├─ Gate C → MVP4 multi-agent
-  │
-  ├─ Gate D → MVP5 tool builder
-  │
-  └─ MVP6 bandits / retrieval learning (eval-gated; logging starts in MVP1)
+Run / task finishes (or fixture report)
+      ↓
+ReportComposer
+  summary, outcomes, reward, files, tests, PR, trajectory highlights
+      ↓
+WorldGenerator → CitySnapshot
+      ↓
+PublicReport (share URL)
+  city viewer + panels anchored to buildings / landmarks
 ```
+
+Anchors (examples):
+
+| Report section | City anchor |
+| --- | --- |
+| File diff / change | Building(path) |
+| Tests | Testing Facility |
+| PR / push / merge | Harbor / Port |
+| Failures | Warning state on building/district |
+| Agent steps | Character path highlights |
+
+**When a public report is created, the city is generated (or snapshotted) as part of that flow** — same schema for live in-product world and immutable report worlds; visibility differs.
+
+Details: `prd.md` §26.
+
+---
+
+## 3. Quality gates + Track 0 (from PRD §36)
+
+```text
+Track 0 ── City Foundation + PublicReport→CitySnapshot
+    │
+    ├──────── MVP1 Gate A ── solo PR loop + trajectories
+    │              └─ real runs mint reports that generate cities
+    │
+    ├──────── MVP2 indexing + scoped memory → Gate B (global)
+    ├──────── MVP3 living city (bind live agents onto Track 0)
+    ├──────── Gate C → MVP4 multi-agent
+    ├──────── Gate D → MVP5 tool builder
+    └──────── MVP6 learning (eval-gated; logging from MVP1)
+```
+
+### Track 0 — City Foundation (start now)
+
+Build:
+
+* World schema: Sector, District, Building, Landmark, AgentPawn, Anchor
+* Art direction + building archetypes
+* Repo tree → layout generator (fixture repos OK)
+* R3F city viewer shell (camera, LOD, instancing basics)
+* Report anchors + `PublicReport` + share URL stub
+* `CitySnapshot` persistence
+
+**Exit:** shareable report page with a generated city for a fixture repo; summary + file/test/PR anchors work.
 
 ### Gate A — Single-Agent PR Loop
 
-**Topology allowed:** `solo_coder` or thin `coder_tester` only.
+**Allowed before A:** Track 0, fixture/mock reports→cities, event schema, text inspector.
 
-**Blocked until green:** multi-agent swarms, Tool Builder product work, city-as-milestone, active Global Memory retrieval.
+**Blocked until A:** multi-agent swarms, Tool Builder, claiming a finished “live autonomous city,” active Global Memory.
 
-**Exit criteria (all required):**
+**Exit:** real solo PR loop + trajectories + (with Track 0) a real run can mint a PublicReport whose CitySnapshot matches that run.
 
-1. End-to-end: GitHub connect → BYOK → Daytona → edit/test → commit → push → PR
-2. Eval suite (≥20 fixture tasks): success/latency/token targets on solo topology
-3. 100% completed runs write complete trajectory + `reward_v1`; CI/merge hooks update same row
-4. No key leakage; task-scoped sandbox secrets; no destructive default-branch defaults
-5. Failures inspectable via event stream / run inspector
+### Gates B / C / D
 
-### Gate B — Memory Safety
-
-Before any `status=active` Global Memory is retrieved in production:
-
-* Sanitizer scanners live
-* Scope classifier routes correctly on a labeled set
-* Promotion enforces multi-traj + multi-repo + reward/success/abstraction gates
-* Retrieval budget + trajectory attribution
-* Demotion path tested
-
-### Gate C — Multi-Agent Readiness
-
-* Gate A still green on solo baseline
-* `coder_tester` already logged as a decision arm
-* Eval shows which `task_features` need more than solo
-* Shared task memory + branch/worktree isolation
-* Topology is a logged decision key
-
-### Gate D — Tool Builder Readiness
-
-* Gate A green; built-ins cover the common loop
-* Capability-gap detection has precision (not spam)
-* Sandboxed tool tests + permissions + registry versioning
-* Dynamic tool discovery (do not load hundreds of schemas)
+Unchanged in spirit: memory safety; multi-agent readiness; tool-builder readiness. See `prd.md` §36.
 
 ---
 
-## 3. Structured learning (summary of PRD §§18–21)
+## 4. Structured learning (summary of PRD §§18–21)
 
-Prefer product language:
+> **Structured policy learning over trajectories** — not vibes.
 
-> **Structured policy learning over trajectories**
-> (contextual bandits + retrieval credit assignment + memory graduation)
-
-Not: “the agent does reinforcement learning” without schemas or eval.
-
-### Decision surface (discrete only)
-
-| Decision key | Example actions |
-| --- | --- |
-| `model` | `fast`, `coding`, `reasoning` |
-| `topology` | `solo_coder`, `coder_tester`, `coder_tester_reviewer`, `full_pipeline` |
-| `context_budget` | `4k`, `8k`, `16k` |
-| `tool_pack` | retrieved tool / skill ids |
-| `memory_pack` | retrieved memory ids |
-| `stop_policy` | `stop_on_green`, `max_3_retries`, `ask_human_on_second_fail` |
-| `test_policy` | `unit_only`, `unit_lint_type`, `full_ci` |
-
-### Trajectory + reward
-
-* Every run → immutable trajectory (Postgres) + artifacts (R2)
-* Incomplete trajectory = bug
-* `reward_v1` versioned in code; component breakdown stored; delayed CI/merge/revert settle the same row
-* `useful_files` / `useful_tools` / `useful_memories` / `wasted_retrievals` for credit assignment
-
-### Policy promotion
-
-```text
-heuristics + logging (always)
-  → contextual bandits (min samples / CIs)
-  → offline preferences
-  → retrieval learning from useful_* labels
-  → distill routers (only after measurable gains)
-  → advanced offline RL (last; needs real volume)
-```
-
-New policy: offline eval → optional shadow → canary → active, with automatic rollback. **No eval harness → no self-improvement claims.**
+Discrete decision surface, mandatory trajectories, versioned `reward_v1`, policy shadow→canary→active, eval harness required. Full detail in `prd.md` §§18–21.
 
 ---
 
-## 4. Global Memory logic (summary of PRD §12)
+## 5. Global Memory (summary of PRD §12)
 
-**Default: reject.** Extractor proposes; sanitizer + promotion job decide.
-
-```text
-raw candidate
-  → hard scanners (secrets / PII / internal URLs / raw code dumps)
-  → scope classifier → user | codebase | episodic | global | reject
-  → WHEN/DO generalization, abstraction_score ≥ 0.7
-  → dedupe / contradiction
-  → status=candidate
-  → promote IFF ≥3 traj, ≥2 repos, reward + success thresholds, age_ok, no conflict
-  → retrieve only active + confidence floor + token budget (log memory_pack)
-  → demote on underperformance; archive; no silent reactivate
-```
-
-**Invariant:** agents cannot set `scope=global` + `status=active`. Only the graduation service can.
-
-Until Gate B: candidates may be collected; **active global retrieval stays off**.
+Default deny → sanitize → candidate → multi-repo promote → budgeted retrieve → demote. Agents never write `scope=global, status=active`. Active retrieval off until Gate B.
 
 ---
 
-## 5. How to implement
+## 6. How to implement
 
 ### Guiding constraints
 
-1. Vertical slices with demoable exits
-2. Trajectories from day one (before bandits)
-3. **Gate A before amplifiers** (multi-agent, tools, city-as-milestone)
+1. **City Foundation early** — world schema + report→city before deep agent polish
+2. Trajectories from day one of the agent track
+3. Gate A before multi-agent / Tool Builder / “live city done” claims
 4. One agent before many
-5. City visualizes events; pause city if Gate A regresses
-6. Context Engine: discover, don’t dump (`cursor-strategy.md`)
-7. Global Memory default deny (§12)
+5. Living-city polish pauses if Gate A regresses; report/snapshot path should keep working
+6. Context Engine: discover, don’t dump
+7. Global Memory default deny
 
 ### Monorepo
 
 ```text
 tourist/
-├── apps/web
+├── apps/web                    # city viewer + report pages early
 ├── apps/api
 ├── apps/worker
-├── services/agent-runtime    # Python + OpenAI Agents SDK
+├── services/agent-runtime
 ├── services/indexing
-├── services/memory           # includes graduation job
-├── services/learning         # reward_v1, bandits, eval
-├── packages/protocol         # Task, Event, Trajectory, Reward, MemoryRecord, Policy
+├── services/memory
+├── services/learning
+├── services/report-composer    # PublicReport + anchors
+├── packages/protocol           # + World*, CitySnapshot, PublicReport
 ├── packages/events
 ├── packages/github
-└── packages/world-generator  # after Gate A / stable events
+└── packages/world-generator    # Track 0 — not “later”
 ```
 
-### Spine (Gate A)
+### Dual spine
 
 ```text
-GitHub App → task → BYOK → Daytona → solo agent (tool-driven discovery)
-  → test / commit / push / PR → events → trajectory + reward_v1
+Track 0:  fixture repo → WorldGenerator → CitySnapshot → PublicReport URL
+MVP1:     GitHub → BYOK → Daytona → solo agent → PR → events → trajectory
+Merge:    real run → ReportComposer → same WorldGenerator → shareable city report
 ```
 
 ---
 
-## 6. Branch strategy
-
-Long-lived `main` (always demoable) + phase branches. **Merge only when the phase exit and any required gate are met.**
+## 7. Branch strategy
 
 | Branch | Purpose | Merge when |
 | --- | --- | --- |
 | `main` | Stable demos + docs | Continuous |
-| `feat/phase-0-scaffold` | Monorepo, CI, protocol schemas | Scaffold boots |
-| `feat/phase-1-cloud-agent` | GitHub App, BYOK, Daytona, solo → PR | Real PR on a repo |
-| `feat/phase-1b-trajectories` | Trajectory store, `reward_v1`, artifacts | 100% runs scored |
-| `feat/phase-1-gate-a` | Eval suite + Gate A checklist | **Gate A green** |
-| `feat/phase-2-indexing` | Tree-sitter, hybrid search, Context Engine | Search tools used successfully |
-| `feat/phase-2-memory` | User / codebase / episodic | Useful reuse on second task |
-| `feat/phase-2b-global-memory` | Sanitizer + promotion/demotion | **Gate B green**; actives graduate under rules |
-| `feat/phase-3-city-mvp` | World gen + event-driven city | Gate A still green; city mirrors live edits |
-| `feat/phase-4-multi-agent` | Topologies + shared task memory | **Gate C**; simple tasks stay solo |
-| `feat/phase-5-tool-builder` | Gap → sandbox tool → registry | **Gate D**; reused tool with +reward |
-| `feat/phase-6-learning` | Bandits, eval as release gate, policy versions | Shadow beats baseline |
-| `feat/phase-6b-retrieval-rl` | Train on `useful_*` labels | Measurable retrieval lift |
+| `feat/phase-0-scaffold` | Monorepo, CI, base protocol | Scaffold boots |
+| `feat/track-0-city-foundation` | World schema, generator, viewer shell | Fixture city renders |
+| `feat/track-0-public-reports` | ReportComposer, anchors, share URL, snapshots | Shareable report→city works |
+| `feat/phase-1-cloud-agent` | GitHub, BYOK, Daytona, solo → PR | Real PR |
+| `feat/phase-1b-trajectories` | Trajectory + `reward_v1` | 100% runs scored |
+| `feat/phase-1-gate-a` | Eval + report bridge from real runs | **Gate A green** |
+| `feat/phase-2-indexing` | Context Engine | Search tools work |
+| `feat/phase-2-memory` | User / codebase / episodic | Reuse on second task |
+| `feat/phase-2b-global-memory` | Graduation pipeline | **Gate B** |
+| `feat/phase-3-living-city` | Live pawns/animations on Track 0 | Live run readable in city |
+| `feat/phase-4-multi-agent` | Topologies | **Gate C** |
+| `feat/phase-5-tool-builder` | Tool factory | **Gate D** |
+| `feat/phase-6-learning` | Bandits / eval gates | Shadow beats baseline |
 
 **Rules**
 
-* Core spine: one phase branch at a time until Gate A.
-* City may parallelize only after event schema is stable **and** Gate A is green (or clearly on track with a dedicated owner who yields on A regressions).
-* Hotfixes → `main`.
+* Track 0 and Phase 1 may run in parallel (two branches / owners).
+* Do not block Track 0 on Gate A.
+* Do not ship multi-agent or Tool Builder before Gates C/D.
 * Schema changes update `packages/protocol` in the same PR.
-* `experiment/*` for learning experiments that may never merge.
 
 ---
 
-## 7. Step-by-step build order
+## 8. Step-by-step build order
 
-### Phase 0 — Scaffold (1–2 weeks)
+### Phase 0 — Scaffold (1 week)
 
-* Monorepo + docker compose (Postgres, Redis)
-* Protocol: Task, Event, Trajectory, Reward, MemoryRecord, PolicyVersion
-* Next.js shell + Fastify healthcheck + CI
+Monorepo, docker compose, protocol stubs including `World*`, `CitySnapshot`, `PublicReport`, Trajectory, Reward.
 
-**Exit:** compose up, web loads, API healthy.
+### Track 0 — City + reports (weeks 1–4, parallel)
 
-### Phase 1 — Cloud coding agent → Gate A (3–6 weeks)
+1. Art direction + schema
+2. Fixture repo → layout → R3F viewer
+3. Anchors + PublicReport share page
+4. Persist CitySnapshot
 
-* GitHub App, BYOK, Daytona, solo agent tools (read/search/edit/shell)
-* Large tool outputs → artifacts (Cursor pattern)
-* Branch → commit → push → PR
-* Text event stream + run inspector
+**Exit:** public report creates/navigates a city.
 
-**Exit:** real PR from natural-language task. Then close Gate A with fixture eval.
+### Phase 1 — Solo agent → Gate A (weeks 2–7, parallel)
 
-### Phase 1b — Trajectories (overlap end of Phase 1)
+GitHub, BYOK, Daytona, solo tools, PR, events shaped for world schema, trajectories, then real run → PublicReport.
 
-* Persist trajectory; `reward_v1` components; delayed webhooks
-* Completeness alerts
+**Exit:** Gate A + report bridge.
 
-**Exit:** every completed run has score + breakdown (Gate A item 3).
+### Phase 2 — Indexing + scoped memory
 
-### Phase 2 — Indexing + Context Engine (after Gate A)
+Richer layout inputs; memory tools; Gate B before active global.
 
-* Tree-sitter → symbols → chunks → Qdrant
-* `rg` + semantic + `read_file` / `read_artifact`
-* Context Router + token budgeter
+### Phase 3 — Living city
 
-**Exit:** less dumped context; retrieval logged on trajectory.
+Bind live agent events to Track 0 (pawns, construction, harbor). Pause polish if Gate A regresses.
 
-### Phase 2 memory — Scoped memory
+### Phases 4–6
 
-* User / codebase / episodic APIs; extract after task; memory search as tool
-
-**Exit:** second task on same repo reuses decisions usefully.
-
-### Phase 2b — Global graduation → Gate B
-
-* Full §12 pipeline; admin view of candidates/actives/rejects
-
-**Exit:** Gate B green; a few high-precision global playbooks only.
-
-### Phase 3 — City MVP (after Gate A; stable events)
-
-* Repo → sectors/buildings; event-driven activity; DOM overlays; InstancedMesh / on-demand render
-
-**Exit:** run state understandable from city alone. **Pause if Gate A regresses.**
-
-### Phase 4 — Multi-agent (Gate C)
-
-* Logged topology enum; handoffs; shared task memory; parallel sandboxes only when required
-
-**Exit:** complex tasks may swarm; simple tasks stay near solo cost/latency.
-
-### Phase 5 — Tool builder (Gate D)
-
-* Capability gap → sandboxed build/test → registry → dynamic discovery → reward attribution
-
-**Exit:** one reused tool with positive attributed reward.
-
-### Phase 6 — Learning (logging from 1b; optimization after A–B)
-
-* Eval as release gate; bandits; shadow policies; retrieval learning from `useful_*`
-
-**Exit:** measurable win vs heuristic baseline on holdout tasks.
+Multi-agent (C), tools (D), bandits/retrieval learning — as in `prd.md` §36.
 
 ---
 
-## 8. First 30 days
+## 9. First 30 days
 
-| Week | Focus |
-| --- | --- |
-| 1 | Scaffold, protocol schemas (incl. Trajectory/Reward/MemoryRecord), GitHub App skeleton |
-| 2 | Daytona hello-world, BYOK path, clone + list files + run tests |
-| 3 | Edit → commit → push → PR; WebSocket event stream |
-| 4 | Trajectory + `reward_v1`; run inspector; ≥5 fixture tasks; freeze Gate A demo path |
+| Week | Track 0 (city/reports) | Agent track |
+| --- | --- | --- |
+| 1 | Scaffold + world schema + art spikes | GitHub App skeleton |
+| 2 | Fixture repo → generated city in viewer | Daytona hello-world, BYOK path |
+| 3 | PublicReport anchors + share URL stub | Edit → commit → push → PR |
+| 4 | CitySnapshot persist; polish report page | Trajectory + `reward_v1`; wire one real run → report→city |
 
-Do **not** start city, multi-agent, or Tool Builder in the first 30 days except optional throwaway event-schema sketches.
+**Do start the city now.** Do **not** start multi-agent or Tool Builder in the first 30 days.
 
 ---
 
-## 9. Success metrics
+## 10. Success metrics
 
 | Milestone | North-star |
 | --- | --- |
-| Gate A | Solo eval success rate + real-repo PR loop |
+| Track 0 | Fixture PublicReport opens a navigable generated city with working anchors |
+| Gate A | Solo eval success + real PR loop + real run mints report→city |
 | 1b | % runs with complete trajectory + reward |
 | 2 | Tokens/successful PR ↓ without success ↓ |
-| Gate B | Precision of retrieved global playbooks; zero secret leaks in memory |
-| 3 | Users can explain agent state from city alone |
+| Gate B | Global playbook precision; no secret leaks in memory |
+| MVP 3 | Live run understandable from city without raw logs |
 | Gate C / 4 | Simple-task cost ≈ solo baseline |
-| Gate D / 5 | Reused tools with positive attributed reward |
+| Gate D / 5 | Reused tools with +reward; Workshop landmark updates |
 | 6 | Eval: success ↑ or cost ↓ at fixed success |
 
 ---
 
-## 10. Deliberately defer
+## 11. Deliberately defer
 
 * Kubernetes / custom sandbox runtime
 * Online PPO / training a frontier model
 * Unfiltered Global Memory writes
-* Multi-agent or Tool Builder before Gate A
-* City-as-milestone before Gate A
-* Auto image-gen for every building type
+* Multi-agent or Tool Builder before Gates C/D
+* Claiming “live autonomous city” before Gate A
+* Auto image-gen for every building type (archetypes first)
 * Always-on huge swarms
 * Heavy billing beyond BYOK metering
-* Ambient city life (ships, weather) before event fidelity is good
+* Rich ambient life (ships, weather) before report anchors + event fidelity are solid
 
 ---
 
-## 11. Doc map
+## 12. Doc map
 
 | Topic | Where |
 | --- | --- |
-| Vision / product narrative | `README.md` |
-| Full architecture | `prd.md` |
-| Global Memory sanitize/promote | `prd.md` §12 |
-| Learning / trajectories / rewards / gates | `prd.md` §§18–21 |
-| MVP + Gates A–D | `prd.md` §36 |
-| Dynamic context discovery | `cursor-strategy.md` |
-| Execution plan / branches / phases | this file |
+| Vision | `README.md` |
+| Architecture | `prd.md` |
+| City + PublicReport→CitySnapshot | `prd.md` §26 |
+| Global Memory | `prd.md` §12 |
+| Learning | `prd.md` §§18–21 |
+| Track 0 + Gates A–D | `prd.md` §36 |
+| Context discovery | `cursor-strategy.md` |
+| Execution plan | this file |

@@ -1761,7 +1761,48 @@ The terminal transcript is merely another consumer.
 
 # 26. 3D Visualization
 
-**Prerequisite:** Gate A (single-agent PR loop) must be green before the city is a delivery milestone. During MVP 1, ship a text event stream / run inspector first. The city visualizes real events; it must not block agent quality work (§36).
+The city is a **first-class product surface**, not a late cosmetic layer.
+
+Build the **City Foundation early** (world schema, art direction, repo→layout generator, report attachment points). That contract is what agent events, trajectories, and public reports plug into later.
+
+**Still true:** a fully *live* agent-driven city needs real events from the coding loop (Gate A). Do not fake agent quality with animations. Do design the city so integration has a home.
+
+## City as public report
+
+A Tourist **Public Report** is not only markdown or logs. It is (or embeds) a **city artifact**:
+
+```text
+Task / run completes
+      ↓
+ReportComposer builds structured report
+  - summary, outcomes, reward components
+  - files touched, tests, PR link
+  - trajectory highlights
+      ↓
+WorldGenerator creates or updates CitySnapshot
+  - sectors/buildings for involved paths
+  - landmarks for tests / PR port / failures
+      ↓
+PublicReport
+  - shareable URL
+  - city viewer (read-only or highlight mode)
+  - report panels attached to buildings / districts / harbor
+```
+
+Attachment model:
+
+```text
+report.sections[] → anchor_id in city
+  e.g. file diff     → building(path)
+       test results  → Testing Facility
+       PR / merge    → Harbor / Port
+       failures      → warning district / building state
+       agent steps   → character path highlights
+```
+
+When a public report is created, **the city for that report is generated (or snapshotted) as part of report creation** — not manually assembled afterward.
+
+Private in-product city (live repo world) and public report city (immutable snapshot for a run) share the same world schema; visibility and mutability differ.
 
 ## Do not use Plotly
 
@@ -2406,9 +2447,41 @@ Perceived speed matters almost as much as absolute speed.
 
 Do not build everything simultaneously.
 
-**Hard rule:** Self-created tools, multi-agent swarms, and the 3D city as a product surface must not divert engineering from a reliable single-agent PR loop. Those systems amplify quality; they do not create it.
+**Hard rules:**
 
-## Gate A — Single-Agent PR Loop (must pass first)
+1. **City Foundation early** — design the world, schema, and report-attachment model first so later agent/memory/PR work integrates into a real surface (see §26).
+2. **Gate A still required for live agent quality** — multi-agent swarms and Tool Builder stay blocked until the solo PR loop is reliable. Fancy city ≠ working agent.
+3. **Public reports generate cities** — report creation produces/updates a `CitySnapshot` with anchored sections.
+
+## Track 0 — City Foundation (start immediately / in parallel with MVP 1)
+
+Purpose: integration contract + brand + reporting surface.
+
+Build:
+
+```text
+world schema (Sector, District, Building, Landmark, AgentPawn, Anchor)
+art direction + building archetypes by language/file kind
+repo tree → layout generator (even from static fixture repos)
+city viewer shell (R3F) with camera, LOD, instancing basics
+report anchors API (section → building/landmark)
+PublicReport draft model + share URL stub
+CitySnapshot persist (Postgres metadata + object storage blob)
+```
+
+Driven initially by:
+
+```text
+fixture repositories
+mock events
+manual / scripted report fixtures
+```
+
+**Exit:** open a shareable report page that shows a generated city for a fixture repo, with at least summary + file/test/PR anchors.
+
+This track **defines** `packages/world-generator` and city event consumers early so MVP 1 emits into a known shape.
+
+## Gate A — Single-Agent PR Loop (required for live agents; parallel to Track 0)
 
 Topology locked to:
 
@@ -2423,10 +2496,17 @@ Forbidden until Gate A is green:
 ```text
 full multi-agent topologies (planner swarms, parallel coders, integration agent)
 self-created Tool Builder / registry product work
-3D city as a primary delivery milestone
-  (event stream + simple UI inspector are allowed earlier)
+claiming “live autonomous city” as done without real agent events
 Global Memory promotion to active
   (episodic + codebase memory logging may exist; global stays candidate-only or off)
+```
+
+**Explicitly allowed before Gate A:**
+
+```text
+City Foundation (Track 0)
+public report + city snapshot from fixtures / mock runs
+event schema + text inspector
 ```
 
 ### Gate A exit criteria (all required)
@@ -2436,7 +2516,7 @@ Global Memory promotion to active
    GitHub connect → BYOK → Daytona → edit/test → commit → push → open PR
 
 2. Eval suite (fixture repos, ≥ 20 tasks) with topology=solo_coder:
-   success_rate ≥ target_S          # e.g. 60%+ CI-green or accepted PR equivalent early on
+   success_rate ≥ target_S
    median latency within budget
    median tokens within budget
 
@@ -2451,17 +2531,20 @@ Global Memory promotion to active
    no destructive defaults on default branch
 
 5. Operability:
-   failures are inspectable via event stream / run inspector
-   flaky infra (sandbox/GitHub) does not masquerade as agent success
+   failures inspectable via events / inspector / city highlights when wired
+   flaky infra does not masquerade as agent success
+
+6. Report bridge (once Track 0 exists):
+   a real agent run can mint a PublicReport whose CitySnapshot reflects that run
 ```
 
-Until Gate A passes, roadmap language is:
+Until Gate A passes, agent roadmap language is:
 
 > Prove: "Give it a repo and issue, get a useful PR."
 
-Not:
+City roadmap language (parallel) is:
 
-> Build the city / swarm / tool factory.
+> Prove: "A report creates a city you can share and navigate."
 
 ## MVP 1 - Cloud Coding Agent (Gate A)
 
@@ -2476,15 +2559,14 @@ single coding agent
 file editing + shell + tests
 Git commits + branch push
 PR creation
-streaming event log / run inspector
+events conforming to city/world schema
 trajectory + reward_v1 writers
+PublicReport from real run → CitySnapshot (uses Track 0)
 ```
-
-Nothing else is required for MVP 1.
 
 ## MVP 2 - Codebase Intelligence + Scoped Memory
 
-Only after Gate A is green (or in parallel *without* blocking Gate A).
+After Gate A is green (or in parallel *without* starving Gate A or Track 0).
 
 Add:
 
@@ -2495,9 +2577,10 @@ user memory
 codebase memory
 episodic memory
 old task retrieval
+richer city layout from index (symbols / importance → building prominence)
 ```
 
-Global Memory extractor may invent **candidates**, but **promotion stays off** until sanitizer + multi-repo evidence rules from §12 are implemented and Gate A remains green.
+Global Memory extractor may invent **candidates**, but **promotion stays off** until §12 rules + Gate B; prefer Gate A remaining green.
 
 ## Gate B — Memory Safety
 
@@ -2511,29 +2594,20 @@ retrieval budget + attribution on trajectories
 demotion path tested
 ```
 
-## MVP 3 - Visual World (after events exist; after Gate A)
+## MVP 3 - Living City (bind real agent life onto Track 0)
 
-The city **visualizes** the agent. It must not become the agent.
-
-Allowed early (during MVP 1):
+Track 0 already has generation + reports. MVP 3 makes the in-product world **live**:
 
 ```text
-WebSocket events
-text activity stream
-run inspector
-```
-
-Allowed as MVP 3 only after Gate A:
-
-```text
-repo → city generation
-sectors / buildings
 agent characters driven by real events
-construction animations
-diff / file overlays
+construction / demolition animations
+testing facility live states
+harbor activity on push/PR/merge
+diff overlays on buildings
+ambient motion only where backed by state
 ```
 
-**Parallelization rule:** world-generator work may start once the event schema is stable, but it cannot steal people/time from Gate A failures. If Gate A regresses, city work pauses.
+**Rule:** if Gate A regresses, pause *living* city polish; keep report/snapshot path working.
 
 ## Gate C — Multi-Agent Readiness
 
@@ -2557,9 +2631,10 @@ planner / coder / researcher / tester / reviewer as needed
 parallel sandboxes when topology requires
 shared task memory
 integration agent
+multi-agent activity visible as multiple pawns in the city
 ```
 
-Default for simple tasks remains `solo_coder`. Swarms are opt-in by policy, not by enthusiasm.
+Default for simple tasks remains `solo_coder`.
 
 ## Gate D — Tool Builder Readiness
 
@@ -2585,11 +2660,12 @@ sandbox validation
 tool registry
 semantic tool discovery
 tool reuse with reward attribution
+Tool Workshop landmark updates when tools are created
 ```
 
 ## MVP 6 - Learning (starts during MVP 1; deepens later)
 
-Trajectory + `reward_v1` begin in MVP 1.
+Trajectory + `reward_v1` begin in MVP 1; report city can show reward/outcome badges.
 
 Later, after Gates A–B:
 
@@ -2606,19 +2682,23 @@ Do **not** claim self-improvement until eval gates exist.
 ### Sequencing diagram
 
 ```text
-MVP1 Gate A ─── reliable solo PR loop + trajectories
-      │
-      ├──────── MVP2 indexing + user/codebase/episodic memory
-      │              │
-      │              └─ Gate B ─ active Global Memory
-      │
-      ├──────── MVP3 city (events already flowing; Gate A holds)
-      │
-      ├──────── Gate C ─ MVP4 multi-agent
-      │
-      ├──────── Gate D ─ MVP5 tool builder
-      │
-      └──────── MVP6 bandits / retrieval learning (eval-gated)
+Track 0 ── City Foundation + PublicReport→CitySnapshot
+    │         (fixture/mock first, schema forever)
+    │
+    ├──────── MVP1 Gate A ── solo PR loop + trajectories
+    │              │
+    │              └─ real runs mint reports that generate cities
+    │
+    ├──────── MVP2 indexing + scoped memory
+    │              └─ Gate B ─ active Global Memory
+    │
+    ├──────── MVP3 living city (bind live agents onto Track 0)
+    │
+    ├──────── Gate C ─ MVP4 multi-agent
+    │
+    ├──────── Gate D ─ MVP5 tool builder
+    │
+    └──────── MVP6 bandits / retrieval learning (eval-gated)
 ```
 
 ---

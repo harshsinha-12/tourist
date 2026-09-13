@@ -6,6 +6,25 @@
 
 > **Status:** Early development / experimental.
 
+## City foundation prototype
+
+The first Track 0 slice is runnable. It includes a versioned city/report protocol, a deterministic fixture-to-city generator, an interactive pixel-art island viewer grounded in the project artwork, building inspection, and report sections that navigate to file, test, and pull-request anchors.
+
+```bash
+corepack pnpm install
+corepack pnpm dev
+```
+
+Open `http://localhost:3000` for the fixture city or `http://localhost:3000/reports/tourist-city-foundation` for its public-report route.
+
+Quality checks:
+
+```bash
+corepack pnpm test
+corepack pnpm typecheck
+corepack pnpm build
+```
+
 ---
 
 ## Overview
