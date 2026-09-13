@@ -1,0 +1,24 @@
+{
+  "style": "Tourist lush anime-inspired isometric pixel art",
+  "backgroundMatte": "#FF00FF",
+  "sheets": {
+    "nature": {
+      "source": "nature-sprite-sheet-transparent.png",
+      "columns": 4,
+      "rows": 3,
+      "items": ["broadleaf-tree", "conifer", "small-tree", "hedge", "flower-bed", "bench", "rock-cluster", "cliff-edge", "shoreline", "fountain", "water-ripple", "cloud"]
+    },
+    "infrastructure": {
+      "source": "infrastructure-sprite-sheet-transparent.png",
+      "columns": 4,
+      "rows": 3,
+      "items": ["road-straight", "road-intersection", "road-corner", "crosswalk", "street-lamp", "compact-car", "delivery-van", "pier", "harbor-crane", "cargo-ship", "speedboat", "construction-sign"]
+    },
+    "landmarks": {
+      "source": "landmarks-sprite-sheet-transparent.png",
+      "columns": 3,
+      "rows": 3,
+      "items": ["main-command", "testing-facility", "data-archive", "research-observatory", "tools-workshop", "review-center", "merge-harbor", "lighthouse", "civic-gazebo"]
+    }
+  }
+}
