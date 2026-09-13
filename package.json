@@ -9,6 +9,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @tourist/web dev",
+    "prepare-buildings": "python3 scripts/prepare-building-sprites.py",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck"
   },

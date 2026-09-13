@@ -8,7 +8,7 @@
 
 ## City foundation prototype
 
-The first Track 0 slice is runnable. It includes a versioned city/report protocol, a deterministic fixture-to-city generator, an interactive pixel-art island viewer grounded in the project artwork, building inspection, and report sections that navigate to file, test, and pull-request anchors.
+The first Track 0 slice is runnable. It includes a versioned city/report protocol, a deterministic fixture-to-city generator, an interactive isometric city built from configurable per-file components, building inspection, and report sections that navigate to file, test, and pull-request anchors.
 
 ```bash
 corepack pnpm install
@@ -1173,3 +1173,61 @@ GitHub is where the work ships.
 ## License
 
 [MIT](./LICENSE)
+
+Building designs and extension mappings live in [`apps/web/components/buildings`](apps/web/components/buildings/README.md). Each file renders its own structure; unknown file types use a generic building.
+
+## File-Type Building Collection
+
+Each supported file type gets its own distinct building design, giving the repository island a visual language based on the technologies and assets inside it.
+
+| Category                     | File types                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **JavaScript & TypeScript**  | `.js`, `.jsx`, `.ts`, `.tsx`                                                                                                    |
+| **Web & Styling**            | `.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.svelte`, `.astro`                                                         |
+| **Programming Languages**    | `.py`, `.go`, `.rs`, `.java`, `.kt`, `.swift`, `.dart`, `.rb`, `.php`, `.c`, `.cpp`, `.h`, `.cs`, `.scala`, `.lua`, `.ex`, `.r` |
+| **Data & Schemas**           | `.sql`, `.graphql`, `.prisma`, `.proto`, `.json`, `.yaml`, `.toml`, `.xml`, `.csv`                                              |
+| **Documentation**            | `.md`, `.mdx`, `.rst`, `.txt`, `.pdf`                                                                                           |
+| **Scripts & Infrastructure** | `.sh`, `.ps1`, `.bat`, `.tf`, `Dockerfile`, `Makefile`                                                                          |
+| **Images & Design**          | `.svg`, `.png`, `.jpg`, `.webp`, `.gif`, `.ico`                                                                                 |
+| **Media & Fonts**            | `.mp3`, `.wav`, `.mp4`, `.webm`, `.woff`, `.ttf`                                                                                |
+| **Notebooks**                | `.ipynb`                                                                                                                        |
+| **Repository Essentials**    | `.gitignore`, `.env`, dependency lockfiles, `LICENSE`                                                                           |
+| **Fallback**                 | One general-purpose building for anything unmapped                                                                              |
+
+### Equivalent Extensions
+
+Equivalent file extensions can share the same building design rather than introducing unnecessary duplicates.
+
+Examples:
+
+* `.yml` and `.yaml`
+* `.jpg` and `.jpeg`
+* `.js`, `.mjs`, and `.cjs`
+* `.ts`, `.mts`, and `.cts`
+
+### Special-Purpose Files
+
+Recognizable file roles can take precedence over their base extension.
+
+For example:
+
+* `*.test.ts` → **Testing Building**
+* `*.spec.ts` → **Testing Building**
+* Ordinary `.ts` files → **TypeScript Building**
+
+This allows the visualization to communicate not only the language of a file, but also its purpose inside the repository.
+
+### Scale
+
+The initial collection would contain roughly **75 distinct building designs**, with one canonical design per supported file type or semantic role.
+
+There would be no random variations within the same type, keeping the visual language consistent across repositories.
+
+In addition to file-based buildings, each repository island would contain several major landmarks:
+
+* **Command Center**
+* **Research Lab**
+* **Workshop**
+* **Harbor**
+
+These landmarks represent higher-level agent and repository functionality rather than individual files.
