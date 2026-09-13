@@ -1,0 +1,167 @@
+{
+  "broadleaf-tree": {
+    "src": "/assets/environment/broadleaf-tree.webp",
+    "sheet": "nature",
+    "cell": 0
+  },
+  "conifer": {
+    "src": "/assets/environment/conifer.webp",
+    "sheet": "nature",
+    "cell": 1
+  },
+  "small-tree": {
+    "src": "/assets/environment/small-tree.webp",
+    "sheet": "nature",
+    "cell": 2
+  },
+  "hedge": {
+    "src": "/assets/environment/hedge.webp",
+    "sheet": "nature",
+    "cell": 3
+  },
+  "flower-bed": {
+    "src": "/assets/environment/flower-bed.webp",
+    "sheet": "nature",
+    "cell": 4
+  },
+  "bench": {
+    "src": "/assets/environment/bench.webp",
+    "sheet": "nature",
+    "cell": 5
+  },
+  "rock-cluster": {
+    "src": "/assets/environment/rock-cluster.webp",
+    "sheet": "nature",
+    "cell": 6
+  },
+  "cliff-edge": {
+    "src": "/assets/environment/cliff-edge.webp",
+    "sheet": "nature",
+    "cell": 7
+  },
+  "shoreline": {
+    "src": "/assets/environment/shoreline.webp",
+    "sheet": "nature",
+    "cell": 8
+  },
+  "fountain": {
+    "src": "/assets/environment/fountain.webp",
+    "sheet": "nature",
+    "cell": 9
+  },
+  "water-ripple": {
+    "src": "/assets/environment/water-ripple.webp",
+    "sheet": "nature",
+    "cell": 10
+  },
+  "cloud": {
+    "src": "/assets/environment/cloud.webp",
+    "sheet": "nature",
+    "cell": 11
+  },
+  "road-straight": {
+    "src": "/assets/environment/road-straight.webp",
+    "sheet": "infrastructure",
+    "cell": 0
+  },
+  "road-intersection": {
+    "src": "/assets/environment/road-intersection.webp",
+    "sheet": "infrastructure",
+    "cell": 1
+  },
+  "road-corner": {
+    "src": "/assets/environment/road-corner.webp",
+    "sheet": "infrastructure",
+    "cell": 2
+  },
+  "crosswalk": {
+    "src": "/assets/environment/crosswalk.webp",
+    "sheet": "infrastructure",
+    "cell": 3
+  },
+  "street-lamp": {
+    "src": "/assets/environment/street-lamp.webp",
+    "sheet": "infrastructure",
+    "cell": 4
+  },
+  "compact-car": {
+    "src": "/assets/environment/compact-car.webp",
+    "sheet": "infrastructure",
+    "cell": 5
+  },
+  "delivery-van": {
+    "src": "/assets/environment/delivery-van.webp",
+    "sheet": "infrastructure",
+    "cell": 6
+  },
+  "pier": {
+    "src": "/assets/environment/pier.webp",
+    "sheet": "infrastructure",
+    "cell": 7
+  },
+  "harbor-crane": {
+    "src": "/assets/environment/harbor-crane.webp",
+    "sheet": "infrastructure",
+    "cell": 8
+  },
+  "cargo-ship": {
+    "src": "/assets/environment/cargo-ship.webp",
+    "sheet": "infrastructure",
+    "cell": 9
+  },
+  "speedboat": {
+    "src": "/assets/environment/speedboat.webp",
+    "sheet": "infrastructure",
+    "cell": 10
+  },
+  "construction-sign": {
+    "src": "/assets/environment/construction-sign.webp",
+    "sheet": "infrastructure",
+    "cell": 11
+  },
+  "main-command": {
+    "src": "/assets/environment/main-command.webp",
+    "sheet": "landmarks",
+    "cell": 0
+  },
+  "testing-facility": {
+    "src": "/assets/environment/testing-facility.webp",
+    "sheet": "landmarks",
+    "cell": 1
+  },
+  "data-archive": {
+    "src": "/assets/environment/data-archive.webp",
+    "sheet": "landmarks",
+    "cell": 2
+  },
+  "research-observatory": {
+    "src": "/assets/environment/research-observatory.webp",
+    "sheet": "landmarks",
+    "cell": 3
+  },
+  "tools-workshop": {
+    "src": "/assets/environment/tools-workshop.webp",
+    "sheet": "landmarks",
+    "cell": 4
+  },
+  "review-center": {
+    "src": "/assets/environment/review-center.webp",
+    "sheet": "landmarks",
+    "cell": 5
+  },
+  "merge-harbor": {
+    "src": "/assets/environment/merge-harbor.webp",
+    "sheet": "landmarks",
+    "cell": 6
+  },
+  "lighthouse": {
+    "src": "/assets/environment/lighthouse.webp",
+    "sheet": "landmarks",
+    "cell": 7
+  },
+  "civic-gazebo": {
+    "src": "/assets/environment/civic-gazebo.webp",
+    "sheet": "landmarks",
+    "cell": 8
+  }
+}

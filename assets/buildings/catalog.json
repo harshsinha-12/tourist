@@ -1,0 +1,988 @@
+[
+  {
+    "id": "javascript",
+    "name": "JavaScript",
+    "example": ".js",
+    "extensions": [
+      "js",
+      "mjs",
+      "cjs"
+    ],
+    "languages": [
+      "javascript"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Golden workshop",
+    "description": "yellow trim, broad ivory two-story workshop, external staircase, black steel piping, rooftop HVAC, exact JS facade sign"
+  },
+  {
+    "id": "jsx",
+    "name": "JSX",
+    "example": ".jsx",
+    "extensions": [
+      "jsx"
+    ],
+    "languages": [
+      "javascriptreact",
+      "jsx"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Component pavilion",
+    "description": "cyan trim, interlocking two-wing ivory pavilion joined by a glass atrium, rooftop atom-shaped sculpture, exact JSX facade sign"
+  },
+  {
+    "id": "typescript",
+    "name": "TypeScript",
+    "example": ".ts",
+    "extensions": [
+      "ts",
+      "mts",
+      "cts"
+    ],
+    "languages": [
+      "typescript"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Blue headquarters",
+    "description": "cobalt blue trim, tall three-story stepped ivory headquarters, vertical blue-glass bays, terrace, aerial mast, exact TS facade sign"
+  },
+  {
+    "id": "tsx",
+    "name": "TSX",
+    "example": ".tsx",
+    "extensions": [
+      "tsx"
+    ],
+    "languages": [
+      "typescriptreact",
+      "tsx"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Interface institute",
+    "description": "royal blue and cyan, ivory terraced institute with hexagonal glass conservatory and suspended walkway, exact TSX facade sign"
+  },
+  {
+    "id": "html",
+    "name": "HTML",
+    "example": ".html",
+    "extensions": [
+      "html",
+      "htm"
+    ],
+    "languages": [
+      "html"
+    ],
+    "category": "Web & styling",
+    "title": "Markup hall",
+    "description": "burnt orange trim, ivory civic hall with grand nested arch entrance and flat stepped cornices, HTML facade sign"
+  },
+  {
+    "id": "css",
+    "name": "CSS",
+    "example": ".css",
+    "extensions": [
+      "css"
+    ],
+    "languages": [
+      "css"
+    ],
+    "category": "Web & styling",
+    "title": "Design atelier",
+    "description": "cornflower blue and lavender trim, ivory design studio with folded sawtooth skylight roof and colorful material display windows, CSS facade sign"
+  },
+  {
+    "id": "scss",
+    "name": "SCSS",
+    "example": ".scss",
+    "extensions": [
+      "scss"
+    ],
+    "languages": [
+      "scss"
+    ],
+    "category": "Web & styling",
+    "title": "Sass conservatory",
+    "description": "dusty rose and ivory, compact elegant greenhouse atelier with curved glass barrel roof and rose garden, SCSS sign"
+  },
+  {
+    "id": "sass",
+    "name": "Sass",
+    "example": ".sass",
+    "extensions": [
+      "sass"
+    ],
+    "languages": [
+      "sass"
+    ],
+    "category": "Web & styling",
+    "title": "Pattern house",
+    "description": "muted coral pink trim, ivory narrow textile design house with zigzag awnings and tall chimney, SASS sign"
+  },
+  {
+    "id": "less",
+    "name": "Less",
+    "example": ".less",
+    "extensions": [
+      "less"
+    ],
+    "languages": [
+      "less"
+    ],
+    "category": "Web & styling",
+    "title": "Style laboratory",
+    "description": "deep navy trim, ivory laboratory with low horizontal window strips and asymmetrical rooftop monitor, LESS sign"
+  },
+  {
+    "id": "vue",
+    "name": "Vue",
+    "example": ".vue",
+    "extensions": [
+      "vue"
+    ],
+    "languages": [
+      "vue"
+    ],
+    "category": "Web & styling",
+    "title": "Garden pavilion",
+    "description": "emerald green trim, ivory pavilion with angular V-shaped green roof, cascading planted terraces, VUE sign"
+  },
+  {
+    "id": "svelte",
+    "name": "Svelte",
+    "example": ".svelte",
+    "extensions": [
+      "svelte"
+    ],
+    "languages": [
+      "svelte"
+    ],
+    "category": "Web & styling",
+    "title": "Animation studio",
+    "description": "vermilion orange trim, curved ivory animation studio with spiral exterior stairs and roof lightbox, SVELTE sign"
+  },
+  {
+    "id": "astro",
+    "name": "Astro",
+    "example": ".astro",
+    "extensions": [
+      "astro"
+    ],
+    "languages": [
+      "astro"
+    ],
+    "category": "Web & styling",
+    "title": "Star observatory",
+    "description": "deep violet trim, ivory mini observatory with bronze telescope emerging from hemispherical silver dome, ASTRO sign"
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "example": ".py",
+    "extensions": [
+      "py",
+      "pyi",
+      "pyw"
+    ],
+    "languages": [
+      "python"
+    ],
+    "category": "Languages",
+    "title": "Python observatory",
+    "description": "blue and golden yellow, ivory research observatory with paired interlocking rounded roof towers and telescope dome, PY sign"
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "example": ".go",
+    "extensions": [
+      "go"
+    ],
+    "languages": [
+      "go",
+      "golang"
+    ],
+    "category": "Languages",
+    "title": "Dispatch station",
+    "description": "turquoise trim, low ivory transit dispatch station with twin narrow roof vents and glass entrance canopy, GO sign"
+  },
+  {
+    "id": "rust",
+    "name": "Rust",
+    "example": ".rs",
+    "extensions": [
+      "rs"
+    ],
+    "languages": [
+      "rust"
+    ],
+    "category": "Languages",
+    "title": "Precision foundry",
+    "description": "rust orange and graphite, ivory precision foundry with large steel gear crest and copper chimney, RS sign"
+  },
+  {
+    "id": "java",
+    "name": "Java",
+    "example": ".java",
+    "extensions": [
+      "java"
+    ],
+    "languages": [
+      "java"
+    ],
+    "category": "Languages",
+    "title": "Boiler works",
+    "description": "red and teal accents, ivory brick boiler works with polished copper pipes and three roof exhaust stacks, JAVA sign"
+  },
+  {
+    "id": "kotlin",
+    "name": "Kotlin",
+    "example": ".kt",
+    "extensions": [
+      "kt",
+      "kts"
+    ],
+    "languages": [
+      "kotlin"
+    ],
+    "category": "Languages",
+    "title": "Prism institute",
+    "description": "violet and orange trim, faceted ivory corner tower with diagonal glass roof and rooftop pergola, KT sign"
+  },
+  {
+    "id": "swift",
+    "name": "Swift",
+    "example": ".swift",
+    "extensions": [
+      "swift"
+    ],
+    "languages": [
+      "swift"
+    ],
+    "category": "Languages",
+    "title": "Flight studio",
+    "description": "coral red trim, aerodynamic ivory design studio with sweeping wing canopy and white fin roof, SWIFT sign"
+  },
+  {
+    "id": "dart",
+    "name": "Dart",
+    "example": ".dart",
+    "extensions": [
+      "dart"
+    ],
+    "languages": [
+      "dart"
+    ],
+    "category": "Languages",
+    "title": "Crystal workshop",
+    "description": "teal blue trim, angular ivory studio with diamond skylight and sharp folded canopy, DART sign"
+  },
+  {
+    "id": "ruby",
+    "name": "Ruby",
+    "example": ".rb",
+    "extensions": [
+      "rb"
+    ],
+    "languages": [
+      "ruby"
+    ],
+    "category": "Languages",
+    "title": "Gem atelier",
+    "description": "ruby red trim, ivory jewel atelier with faceted crimson skylight dome and arched shop windows, RB sign"
+  },
+  {
+    "id": "php",
+    "name": "PHP",
+    "example": ".php",
+    "extensions": [
+      "php",
+      "phtml"
+    ],
+    "languages": [
+      "php"
+    ],
+    "category": "Languages",
+    "title": "Web exchange",
+    "description": "periwinkle trim, broad ivory exchange house with twin small mansard roof towers and colonnaded entrance, PHP sign"
+  },
+  {
+    "id": "c",
+    "name": "C",
+    "example": ".c",
+    "extensions": [
+      "c"
+    ],
+    "languages": [
+      "c"
+    ],
+    "category": "Languages",
+    "title": "Systems plant",
+    "description": "slate blue trim, solid ivory industrial plant with exposed pipes and square water tank, C sign"
+  },
+  {
+    "id": "cpp",
+    "name": "C++",
+    "example": ".cpp",
+    "extensions": [
+      "cpp",
+      "cc",
+      "cxx"
+    ],
+    "languages": [
+      "cpp",
+      "c++"
+    ],
+    "category": "Languages",
+    "title": "Assembly foundry",
+    "description": "navy trim, ivory heavy engineering foundry with reinforced buttresses and paired furnace chimneys, C++ sign"
+  },
+  {
+    "id": "header",
+    "name": "C header",
+    "example": ".h",
+    "extensions": [
+      "h",
+      "hpp",
+      "hxx"
+    ],
+    "languages": [
+      "c",
+      "header"
+    ],
+    "category": "Languages",
+    "title": "Blueprint office",
+    "description": "steel gray trim, ivory drafting office with triangular clerestory and blueprint display window, H sign"
+  },
+  {
+    "id": "csharp",
+    "name": "C#",
+    "example": ".cs",
+    "extensions": [
+      "cs"
+    ],
+    "languages": [
+      "csharp",
+      "c#"
+    ],
+    "category": "Languages",
+    "title": "Octagon lab",
+    "description": "plum trim, octagonal ivory computing laboratory with segmented glass roof and brass rails, C# sign"
+  },
+  {
+    "id": "scala",
+    "name": "Scala",
+    "example": ".scala",
+    "extensions": [
+      "scala",
+      "sc"
+    ],
+    "languages": [
+      "scala"
+    ],
+    "category": "Languages",
+    "title": "Stepped academy",
+    "description": "red trim, narrow ivory academic building with three offset stacked terraces and red slat screens, SCALA sign"
+  },
+  {
+    "id": "lua",
+    "name": "Lua",
+    "example": ".lua",
+    "extensions": [
+      "lua"
+    ],
+    "languages": [
+      "lua"
+    ],
+    "category": "Languages",
+    "title": "Moon house",
+    "description": "midnight blue trim, ivory astronomy house with silver crescent sculpture and tiny blue dome, LUA sign"
+  },
+  {
+    "id": "elixir",
+    "name": "Elixir",
+    "example": ".ex",
+    "extensions": [
+      "ex",
+      "exs"
+    ],
+    "languages": [
+      "elixir"
+    ],
+    "category": "Languages",
+    "title": "Apothecary lab",
+    "description": "muted amethyst trim, ivory laboratory with teardrop glass roof and paired copper distillation vessels, EX sign"
+  },
+  {
+    "id": "r",
+    "name": "R",
+    "example": ".r",
+    "extensions": [
+      "r"
+    ],
+    "languages": [
+      "r"
+    ],
+    "category": "Languages",
+    "title": "Statistics institute",
+    "description": "steel blue trim, ivory institute with semicircular glass lecture hall and rooftop weather instruments, R sign"
+  },
+  {
+    "id": "sql",
+    "name": "SQL",
+    "example": ".sql",
+    "extensions": [
+      "sql"
+    ],
+    "languages": [
+      "sql"
+    ],
+    "category": "Data & schemas",
+    "title": "Database vault",
+    "description": "muted teal trim, ivory data vault with three stacked cylindrical silver server silos joined to square entrance, SQL sign"
+  },
+  {
+    "id": "graphql",
+    "name": "GraphQL",
+    "example": ".graphql",
+    "extensions": [
+      "graphql",
+      "gql"
+    ],
+    "languages": [
+      "graphql"
+    ],
+    "category": "Data & schemas",
+    "title": "Graph exchange",
+    "description": "pink accent trim, ivory communications exchange with triangular structural lattice over glass atrium, GQL sign"
+  },
+  {
+    "id": "prisma",
+    "name": "Prisma",
+    "example": ".prisma",
+    "extensions": [
+      "prisma"
+    ],
+    "languages": [
+      "prisma"
+    ],
+    "category": "Data & schemas",
+    "title": "Schema prism",
+    "description": "charcoal and cyan trim, ivory angular data house with a large triangular slate roof and thin skylights, PRISMA sign"
+  },
+  {
+    "id": "protobuf",
+    "name": "Protocol Buffers",
+    "example": ".proto",
+    "extensions": [
+      "proto"
+    ],
+    "languages": [
+      "protobuf",
+      "protocol",
+      "buffers"
+    ],
+    "category": "Data & schemas",
+    "title": "Protocol relay",
+    "description": "deep blue trim, ivory relay station with paired satellite dishes and cable conduits, PROTO sign"
+  },
+  {
+    "id": "json",
+    "name": "JSON",
+    "example": ".json",
+    "extensions": [
+      "json",
+      "jsonc",
+      "json5"
+    ],
+    "languages": [
+      "json",
+      "jsonc"
+    ],
+    "category": "Data & schemas",
+    "title": "Record depot",
+    "description": "golden ochre trim, ivory record depot with orderly stacked storage bays and central glass loading door, JSON sign"
+  },
+  {
+    "id": "yaml",
+    "name": "YAML",
+    "example": ".yaml",
+    "extensions": [
+      "yaml",
+      "yml"
+    ],
+    "languages": [
+      "yaml"
+    ],
+    "category": "Data & schemas",
+    "title": "Manifest lodge",
+    "description": "muted sage green trim, ivory lodge with layered low roofs and nested covered porches, YAML sign"
+  },
+  {
+    "id": "toml",
+    "name": "TOML",
+    "example": ".toml",
+    "extensions": [
+      "toml"
+    ],
+    "languages": [
+      "toml"
+    ],
+    "category": "Data & schemas",
+    "title": "Settings house",
+    "description": "copper and cream, compact ivory utility house with symmetrical roof vents and grid windows, TOML sign"
+  },
+  {
+    "id": "xml",
+    "name": "XML",
+    "example": ".xml",
+    "extensions": [
+      "xml",
+      "xsd",
+      "xsl",
+      "xslt"
+    ],
+    "languages": [
+      "xml"
+    ],
+    "category": "Data & schemas",
+    "title": "Archive arcade",
+    "description": "terracotta trim, ivory archive with three nested archways and domed corner turret, XML sign"
+  },
+  {
+    "id": "csv",
+    "name": "CSV",
+    "example": ".csv",
+    "extensions": [
+      "csv",
+      "tsv"
+    ],
+    "languages": [
+      "csv"
+    ],
+    "category": "Data & schemas",
+    "title": "Ledger market",
+    "description": "olive trim, ivory counting house with long gridded clerestory roof and neat loading bays, CSV sign"
+  },
+  {
+    "id": "markdown",
+    "name": "Markdown",
+    "example": ".md",
+    "extensions": [
+      "md",
+      "markdown"
+    ],
+    "languages": [
+      "markdown"
+    ],
+    "category": "Documentation",
+    "title": "Reading library",
+    "description": "teal and warm walnut trim, ivory library with arched reading windows and gabled blue slate roof, MD sign"
+  },
+  {
+    "id": "mdx",
+    "name": "MDX",
+    "example": ".mdx",
+    "extensions": [
+      "mdx"
+    ],
+    "languages": [
+      "mdx"
+    ],
+    "category": "Documentation",
+    "title": "Interactive library",
+    "description": "violet and amber trim, ivory library with glass annex, outdoor reading terrace and roof lightbox, MDX sign"
+  },
+  {
+    "id": "rst",
+    "name": "reStructuredText",
+    "example": ".rst",
+    "extensions": [
+      "rst"
+    ],
+    "languages": [
+      "restructuredtext"
+    ],
+    "category": "Documentation",
+    "title": "Reference archive",
+    "description": "sandstone and forest green trim, formal ivory archive with pediment entrance and thin tower, RST sign"
+  },
+  {
+    "id": "text",
+    "name": "Text",
+    "example": ".txt",
+    "extensions": [
+      "txt",
+      "text"
+    ],
+    "languages": [
+      "text",
+      "plaintext"
+    ],
+    "category": "Documentation",
+    "title": "Writers cottage",
+    "description": "warm gray trim, small ivory writers cottage with simple slate hip roof, cozy bay window and book planter, TXT sign"
+  },
+  {
+    "id": "pdf",
+    "name": "PDF",
+    "example": ".pdf",
+    "extensions": [
+      "pdf"
+    ],
+    "languages": [
+      "pdf"
+    ],
+    "category": "Documentation",
+    "title": "Publishing house",
+    "description": "crimson trim, ivory printing house with red gabled roof and glazed press room extension, PDF sign"
+  },
+  {
+    "id": "shell",
+    "name": "Shell",
+    "example": ".sh",
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh",
+      "fish"
+    ],
+    "languages": [
+      "shell",
+      "bash"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Terminal station",
+    "description": "deep green and charcoal trim, ivory control station with glowing green command window and roof antenna, SH sign"
+  },
+  {
+    "id": "powershell",
+    "name": "PowerShell",
+    "example": ".ps1",
+    "extensions": [
+      "ps1",
+      "psm1",
+      "psd1"
+    ],
+    "languages": [
+      "powershell"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Automation office",
+    "description": "electric blue trim, ivory angular control office with stepped aerial array and broad window wall, PS1 sign"
+  },
+  {
+    "id": "batch",
+    "name": "Batch",
+    "example": ".bat",
+    "extensions": [
+      "bat",
+      "cmd"
+    ],
+    "languages": [
+      "batch"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Batch depot",
+    "description": "dark slate and pale amber trim, squat ivory utility depot with twin shutter doors and rooftop generator, BAT sign"
+  },
+  {
+    "id": "terraform",
+    "name": "Terraform",
+    "example": ".tf",
+    "extensions": [
+      "tf",
+      "tfvars"
+    ],
+    "languages": [
+      "terraform",
+      "hcl"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Terrain works",
+    "description": "muted violet trim, ivory earthworks planning station with three interlocking cubic roof volumes and survey mast, TF sign"
+  },
+  {
+    "id": "docker",
+    "name": "Docker",
+    "example": "Dockerfile",
+    "extensions": [],
+    "languages": [
+      "dockerfile",
+      "docker"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Container workshop",
+    "description": "ocean blue trim, ivory dockside workshop with stacked blue container annexes, roof winch and tiny gantry, DOCKER sign"
+  },
+  {
+    "id": "makefile",
+    "name": "Makefile",
+    "example": "Makefile",
+    "extensions": [],
+    "languages": [
+      "makefile",
+      "make"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Build forge",
+    "description": "ochre and iron trim, ivory forge with exposed roof trusses, copper chimney and covered assembly yard, MAKE sign"
+  },
+  {
+    "id": "svg",
+    "name": "SVG",
+    "example": ".svg",
+    "extensions": [
+      "svg"
+    ],
+    "languages": [
+      "svg"
+    ],
+    "category": "Images & design",
+    "title": "Vector atelier",
+    "description": "orange and teal trim, ivory art atelier with arched glass roof and geometric metal sculpture, SVG sign"
+  },
+  {
+    "id": "png",
+    "name": "PNG",
+    "example": ".png",
+    "extensions": [
+      "png"
+    ],
+    "languages": [
+      "png"
+    ],
+    "category": "Images & design",
+    "title": "Pixel studio",
+    "description": "forest green trim, ivory photography studio with grid skylights and colorful square mosaic panel, PNG sign"
+  },
+  {
+    "id": "jpeg",
+    "name": "JPEG",
+    "example": ".jpg",
+    "extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "languages": [
+      "jpeg"
+    ],
+    "category": "Images & design",
+    "title": "Photo house",
+    "description": "warm terracotta trim, ivory photographic house with circular dark lens-shaped front window and roof terrace, JPG sign"
+  },
+  {
+    "id": "webp",
+    "name": "WebP",
+    "example": ".webp",
+    "extensions": [
+      "webp"
+    ],
+    "languages": [
+      "webp"
+    ],
+    "category": "Images & design",
+    "title": "Imaging lab",
+    "description": "mint teal trim, ivory lightweight imaging lab with thin cantilever roof and compact server annex, WEBP sign"
+  },
+  {
+    "id": "gif",
+    "name": "GIF",
+    "example": ".gif",
+    "extensions": [
+      "gif"
+    ],
+    "languages": [
+      "gif"
+    ],
+    "category": "Images & design",
+    "title": "Motion workshop",
+    "description": "muted purple and amber trim, ivory animation workshop with rounded art deco stepped facade and filmstrip windows, GIF sign"
+  },
+  {
+    "id": "ico",
+    "name": "Icon",
+    "example": ".ico",
+    "extensions": [
+      "ico",
+      "icns"
+    ],
+    "languages": [
+      "icon"
+    ],
+    "category": "Images & design",
+    "title": "Miniature atelier",
+    "description": "golden amber trim, small ornate ivory icon-makers atelier with decorative square medallion and turret roof, ICO sign"
+  },
+  {
+    "id": "mp3",
+    "name": "MP3",
+    "example": ".mp3",
+    "extensions": [
+      "mp3"
+    ],
+    "languages": [
+      "mp3"
+    ],
+    "category": "Media & fonts",
+    "title": "Music house",
+    "description": "deep burgundy trim, ivory recording house with curved acoustic wall and brass horn rooftop sculpture, MP3 sign"
+  },
+  {
+    "id": "wav",
+    "name": "WAV",
+    "example": ".wav",
+    "extensions": [
+      "wav",
+      "aiff"
+    ],
+    "languages": [
+      "wav"
+    ],
+    "category": "Media & fonts",
+    "title": "Sound laboratory",
+    "description": "blue teal trim, ivory sound laboratory with wavy fin facade and low soundproof recording annex, WAV sign"
+  },
+  {
+    "id": "mp4",
+    "name": "MP4",
+    "example": ".mp4",
+    "extensions": [
+      "mp4",
+      "mov"
+    ],
+    "languages": [
+      "mp4"
+    ],
+    "category": "Media & fonts",
+    "title": "Cinema studio",
+    "description": "muted red and cream, ivory film studio with art deco cinema marquee and tall stage-house roof, MP4 sign"
+  },
+  {
+    "id": "webm",
+    "name": "WebM",
+    "example": ".webm",
+    "extensions": [
+      "webm"
+    ],
+    "languages": [
+      "webm"
+    ],
+    "category": "Media & fonts",
+    "title": "Streaming station",
+    "description": "sea green trim, ivory broadcast station with transmission mast and stepped glass control booth, WEBM sign"
+  },
+  {
+    "id": "woff",
+    "name": "WOFF",
+    "example": ".woff",
+    "extensions": [
+      "woff",
+      "woff2"
+    ],
+    "languages": [
+      "woff"
+    ],
+    "category": "Media & fonts",
+    "title": "Type foundry",
+    "description": "ochre and ink trim, ivory lettering foundry with typographic A-shaped roof support and tall arched windows, WOFF sign"
+  },
+  {
+    "id": "ttf",
+    "name": "TrueType",
+    "example": ".ttf",
+    "extensions": [
+      "ttf",
+      "otf"
+    ],
+    "languages": [
+      "truetype"
+    ],
+    "category": "Media & fonts",
+    "title": "Letterpress house",
+    "description": "charcoal and copper trim, ivory letterpress house with mansard roof and ornamental serif T facade crest, TTF sign"
+  },
+  {
+    "id": "notebook",
+    "name": "Jupyter",
+    "example": ".ipynb",
+    "extensions": [
+      "ipynb"
+    ],
+    "languages": [
+      "jupyter"
+    ],
+    "category": "Repository essentials",
+    "title": "Notebook observatory",
+    "description": "orange trim, ivory scientific observatory with twin round roof instruments and glass experiment atrium, IPYNB sign"
+  },
+  {
+    "id": "gitignore",
+    "name": "Git ignore",
+    "example": ".gitignore",
+    "extensions": [],
+    "languages": [
+      "gitignore"
+    ],
+    "category": "Repository essentials",
+    "title": "Gatehouse",
+    "description": "forest green and charcoal trim, ivory compact gatehouse with wrought iron gate, watch window and roof lantern, GIT sign"
+  },
+  {
+    "id": "environment",
+    "name": "Environment",
+    "example": ".env",
+    "extensions": [],
+    "languages": [
+      "dotenv"
+    ],
+    "category": "Repository essentials",
+    "title": "Environment vault",
+    "description": "sage and brass trim, ivory secure utility vault with copper cooling pipes and greenhouse rooftop capsule, ENV sign"
+  },
+  {
+    "id": "lockfile",
+    "name": "Dependency lock",
+    "example": "package-lock.json",
+    "extensions": [],
+    "languages": [
+      "lockfile"
+    ],
+    "category": "Repository essentials",
+    "title": "Dependency vault",
+    "description": "navy and brass trim, ivory vault house with big circular brass lock medallion and reinforced arched doorway, LOCK sign"
+  },
+  {
+    "id": "license",
+    "name": "License",
+    "example": "LICENSE",
+    "extensions": [],
+    "languages": [
+      "license"
+    ],
+    "category": "Repository essentials",
+    "title": "Charter hall",
+    "description": "burgundy and gold trim, ivory classical charter hall with small pediment, columns and bronze plaque, LICENSE sign"
+  },
+  {
+    "id": "test",
+    "name": "Tests",
+    "example": "app.test.ts",
+    "extensions": [],
+    "languages": [
+      "test"
+    ],
+    "category": "Repository essentials",
+    "title": "Testing facility",
+    "description": "emerald trim, ivory quality laboratory with glass test chamber, checkmark facade crest and roof signal lamps, TEST sign"
+  },
+  {
+    "id": "generic",
+    "name": "Other files",
+    "example": "unknown.file",
+    "extensions": [],
+    "languages": [],
+    "category": "Repository essentials",
+    "title": "General workshop",
+    "description": "muted blue gray and brass trim, inviting ivory general workshop with modest hip roof, arched doorway and simple square tool crest, FILE sign"
+  }
+]

@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "javascript",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      44,
+      79,
+      1212,
+      1163
+    ],
+    "bytes": 427506,
+    "transparentFraction": 0.4903
+  },
+  {
+    "id": "jsx",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      20,
+      111,
+      1239,
+      1133
+    ],
+    "bytes": 379050,
+    "transparentFraction": 0.5577
+  },
+  {
+    "id": "sass",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      130,
+      20,
+      1125,
+      1198
+    ],
+    "bytes": 362966,
+    "transparentFraction": 0.5406
+  },
+  {
+    "id": "tsx",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      56,
+      58,
+      1199,
+      1172
+    ],
+    "bytes": 428364,
+    "transparentFraction": 0.5217
+  },
+  {
+    "id": "typescript",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      46,
+      33,
+      1211,
+      1205
+    ],
+    "bytes": 383768,
+    "transparentFraction": 0.5061
+  },
+  {
+    "id": "astro",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      68,
+      56,
+      1188,
+      1184
+    ],
+    "bytes": 423316,
+    "transparentFraction": 0.4952
+  },
+  {
+    "id": "css",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      72,
+      45,
+      1183,
+      1178
+    ],
+    "bytes": 431368,
+    "transparentFraction": 0.4724
+  },
+  {
+    "id": "html",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      36,
+      48,
+      1218,
+      1154
+    ],
+    "bytes": 386704,
+    "transparentFraction": 0.5276
+  },
+  {
+    "id": "less",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      54,
+      145,
+      1201,
+      1070
+    ],
+    "bytes": 344326,
+    "transparentFraction": 0.5525
+  },
+  {
+    "id": "scss",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      60,
+      85,
+      1201,
+      1131
+    ],
+    "bytes": 437218,
+    "transparentFraction": 0.5172
+  },
+  {
+    "id": "svelte",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      53,
+      35,
+      1201,
+      1183
+    ],
+    "bytes": 423504,
+    "transparentFraction": 0.4631
+  },
+  {
+    "id": "vue",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      80,
+      68,
+      1186,
+      1187
+    ],
+    "bytes": 452392,
+    "transparentFraction": 0.4633
+  },
+  {
+    "id": "c",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      43,
+      71,
+      1211,
+      1154
+    ],
+    "bytes": 370976,
+    "transparentFraction": 0.5398
+  },
+  {
+    "id": "cpp",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      22,
+      28,
+      1232,
+      1185
+    ],
+    "bytes": 376438,
+    "transparentFraction": 0.5595
+  },
+  {
+    "id": "dart",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      90,
+      75,
+      1163,
+      1159
+    ],
+    "bytes": 434616,
+    "transparentFraction": 0.4501
+  },
+  {
+    "id": "php",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      37,
+      69,
+      1218,
+      1163
+    ],
+    "bytes": 411126,
+    "transparentFraction": 0.5133
+  },
+  {
+    "id": "python",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      66,
+      57,
+      1194,
+      1184
+    ],
+    "bytes": 438756,
+    "transparentFraction": 0.4911
+  },
+  {
+    "id": "ruby",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      65,
+      38,
+      1188,
+      1177
+    ],
+    "bytes": 463326,
+    "transparentFraction": 0.4778
+  },
+  {
+    "id": "rust",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      72,
+      54,
+      1183,
+      1154
+    ],
+    "bytes": 383988,
+    "transparentFraction": 0.5309
+  },
+  {
+    "id": "swift",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      64,
+      53,
+      1194,
+      1185
+    ],
+    "bytes": 376788,
+    "transparentFraction": 0.4866
+  },
+  {
+    "id": "csv",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      45,
+      151,
+      1230,
+      1085
+    ],
+    "bytes": 356934,
+    "transparentFraction": 0.5662
+  },
+  {
+    "id": "go",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      22,
+      184,
+      1232,
+      1066
+    ],
+    "bytes": 330630,
+    "transparentFraction": 0.6233
+  },
+  {
+    "id": "header",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      60,
+      27,
+      1204,
+      1174
+    ],
+    "bytes": 402152,
+    "transparentFraction": 0.4766
+  },
+  {
+    "id": "java",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      38,
+      46,
+      1218,
+      1193
+    ],
+    "bytes": 410620,
+    "transparentFraction": 0.5357
+  },
+  {
+    "id": "json",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      51,
+      36,
+      1209,
+      1156
+    ],
+    "bytes": 409280,
+    "transparentFraction": 0.4878
+  },
+  {
+    "id": "kotlin",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      59,
+      32,
+      1206,
+      1162
+    ],
+    "bytes": 452356,
+    "transparentFraction": 0.4816
+  },
+  {
+    "id": "markdown",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      73,
+      67,
+      1181,
+      1185
+    ],
+    "bytes": 444374,
+    "transparentFraction": 0.4603
+  },
+  {
+    "id": "mdx",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      37,
+      35,
+      1221,
+      1155
+    ],
+    "bytes": 465448,
+    "transparentFraction": 0.4733
+  },
+  {
+    "id": "protobuf",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      91,
+      25,
+      1164,
+      1187
+    ],
+    "bytes": 385066,
+    "transparentFraction": 0.5397
+  },
+  {
+    "id": "r",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      25,
+      16,
+      1228,
+      1196
+    ],
+    "bytes": 428504,
+    "transparentFraction": 0.5006
+  },
+  {
+    "id": "rst",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      95,
+      31,
+      1191,
+      1194
+    ],
+    "bytes": 368618,
+    "transparentFraction": 0.5732
+  },
+  {
+    "id": "toml",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      72,
+      52,
+      1183,
+      1169
+    ],
+    "bytes": 419400,
+    "transparentFraction": 0.4784
+  },
+  {
+    "id": "xml",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      54,
+      95,
+      1200,
+      1161
+    ],
+    "bytes": 407960,
+    "transparentFraction": 0.4792
+  },
+  {
+    "id": "yaml",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      45,
+      113,
+      1215,
+      1129
+    ],
+    "bytes": 367294,
+    "transparentFraction": 0.5526
+  },
+  {
+    "id": "pdf",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      48,
+      38,
+      1231,
+      1196
+    ],
+    "bytes": 466806,
+    "transparentFraction": 0.4613
+  },
+  {
+    "id": "text",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      90,
+      81,
+      1168,
+      1158
+    ],
+    "bytes": 399106,
+    "transparentFraction": 0.5024
+  },
+  {
+    "id": "batch",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      40,
+      125,
+      1216,
+      1108
+    ],
+    "bytes": 351034,
+    "transparentFraction": 0.5575
+  },
+  {
+    "id": "csharp",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      74,
+      24,
+      1181,
+      1229
+    ],
+    "bytes": 382900,
+    "transparentFraction": 0.5449
+  },
+  {
+    "id": "docker",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      40,
+      80,
+      1221,
+      1139
+    ],
+    "bytes": 407724,
+    "transparentFraction": 0.526
+  },
+  {
+    "id": "elixir",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      86,
+      26,
+      1182,
+      1173
+    ],
+    "bytes": 395208,
+    "transparentFraction": 0.5207
+  },
+  {
+    "id": "graphql",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      62,
+      24,
+      1204,
+      1199
+    ],
+    "bytes": 422026,
+    "transparentFraction": 0.4805
+  },
+  {
+    "id": "lua",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      82,
+      22,
+      1173,
+      1178
+    ],
+    "bytes": 374048,
+    "transparentFraction": 0.5454
+  },
+  {
+    "id": "makefile",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      39,
+      42,
+      1209,
+      1158
+    ],
+    "bytes": 382514,
+    "transparentFraction": 0.5338
+  },
+  {
+    "id": "powershell",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      41,
+      30,
+      1229,
+      1197
+    ],
+    "bytes": 365392,
+    "transparentFraction": 0.5479
+  },
+  {
+    "id": "prisma",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      45,
+      24,
+      1211,
+      1182
+    ],
+    "bytes": 384812,
+    "transparentFraction": 0.5056
+  },
+  {
+    "id": "scala",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      211,
+      37,
+      1043,
+      1175
+    ],
+    "bytes": 304142,
+    "transparentFraction": 0.625
+  },
+  {
+    "id": "shell",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      61,
+      23,
+      1207,
+      1179
+    ],
+    "bytes": 361366,
+    "transparentFraction": 0.5607
+  },
+  {
+    "id": "sql",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      40,
+      23,
+      1214,
+      1175
+    ],
+    "bytes": 371404,
+    "transparentFraction": 0.5463
+  },
+  {
+    "id": "terraform",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      20,
+      34,
+      1234,
+      1160
+    ],
+    "bytes": 354348,
+    "transparentFraction": 0.571
+  },
+  {
+    "id": "ico",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      153,
+      30,
+      1109,
+      1170
+    ],
+    "bytes": 378092,
+    "transparentFraction": 0.575
+  },
+  {
+    "id": "mp3",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      90,
+      54,
+      1178,
+      1156
+    ],
+    "bytes": 438456,
+    "transparentFraction": 0.463
+  },
+  {
+    "id": "png",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      66,
+      65,
+      1188,
+      1178
+    ],
+    "bytes": 439258,
+    "transparentFraction": 0.4587
+  },
+  {
+    "id": "wav",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      22,
+      62,
+      1231,
+      1155
+    ],
+    "bytes": 353484,
+    "transparentFraction": 0.5562
+  },
+  {
+    "id": "mp4",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      34,
+      104,
+      1224,
+      1124
+    ],
+    "bytes": 329690,
+    "transparentFraction": 0.5564
+  },
+  {
+    "id": "jpeg",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      106,
+      60,
+      1147,
+      1152
+    ],
+    "bytes": 411352,
+    "transparentFraction": 0.5086
+  },
+  {
+    "id": "svg",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      65,
+      99,
+      1190,
+      1169
+    ],
+    "bytes": 452602,
+    "transparentFraction": 0.4686
+  },
+  {
+    "id": "webm",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      156,
+      22,
+      1100,
+      1171
+    ],
+    "bytes": 309782,
+    "transparentFraction": 0.6459
+  },
+  {
+    "id": "webp",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      53,
+      97,
+      1201,
+      1136
+    ],
+    "bytes": 378984,
+    "transparentFraction": 0.5185
+  },
+  {
+    "id": "environment",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      71,
+      62,
+      1193,
+      1160
+    ],
+    "bytes": 463880,
+    "transparentFraction": 0.4594
+  },
+  {
+    "id": "generic",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      89,
+      82,
+      1172,
+      1171
+    ],
+    "bytes": 427178,
+    "transparentFraction": 0.4634
+  },
+  {
+    "id": "gitignore",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      96,
+      25,
+      1158,
+      1118
+    ],
+    "bytes": 362660,
+    "transparentFraction": 0.5374
+  },
+  {
+    "id": "license",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      78,
+      74,
+      1175,
+      1157
+    ],
+    "bytes": 430462,
+    "transparentFraction": 0.4621
+  },
+  {
+    "id": "lockfile",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      61,
+      44,
+      1198,
+      1176
+    ],
+    "bytes": 403434,
+    "transparentFraction": 0.4798
+  },
+  {
+    "id": "notebook",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      18,
+      35,
+      1238,
+      1196
+    ],
+    "bytes": 435490,
+    "transparentFraction": 0.5016
+  },
+  {
+    "id": "test",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      99,
+      51,
+      1165,
+      1141
+    ],
+    "bytes": 370508,
+    "transparentFraction": 0.5044
+  },
+  {
+    "id": "ttf",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      75,
+      31,
+      1183,
+      1201
+    ],
+    "bytes": 415744,
+    "transparentFraction": 0.4857
+  },
+  {
+    "id": "woff",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      77,
+      40,
+      1177,
+      1182
+    ],
+    "bytes": 417072,
+    "transparentFraction": 0.4869
+  },
+  {
+    "id": "gif",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "bounds": [
+      89,
+      61,
+      1170,
+      1144
+    ],
+    "bytes": 406958,
+    "transparentFraction": 0.4816
+  }
+]

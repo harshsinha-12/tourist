@@ -28,7 +28,7 @@ export interface WorldGeneratorInput {
 
 const SECTOR_SIZE = 15;
 const SECTOR_GAP = 4;
-const PLOT_SPACING = 2.7;
+const PLOT_SPACING = 4.2;
 
 const languageColors: Record<string, string> = {
   TypeScript: "#45a8ff",
@@ -75,15 +75,15 @@ function buildingColor(language: string, kind: FileKind): string {
   return languageColors[language] ?? "#79a6ba";
 }
 
-function boundsForSector(index: number, count: number): Bounds {
+function boundsForSector(index: number, count: number, size: number): Bounds {
   const columns = Math.ceil(Math.sqrt(count));
   const row = Math.floor(index / columns);
   const column = index % columns;
   return {
-    x: column * (SECTOR_SIZE + SECTOR_GAP),
-    z: row * (SECTOR_SIZE + SECTOR_GAP),
-    width: SECTOR_SIZE,
-    depth: SECTOR_SIZE,
+    x: column * (size + SECTOR_GAP),
+    z: row * (size + SECTOR_GAP),
+    width: size,
+    depth: size,
   };
 }
 
@@ -97,19 +97,23 @@ function groupBy<T>(items: T[], keyFor: (item: T) => string): Map<string, T[]> {
 }
 
 function createLandmarks(worldWidth: number, worldDepth: number): Landmark[] {
-  const definitions: Array<[LandmarkKind, string, number, number]> = [
-    ["command-center", "Main command", worldWidth / 2, worldDepth / 2],
-    ["testing-facility", "Testing", worldWidth - 1.8, 2],
-    ["data-archive", "Data archive", worldWidth - 1.8, worldDepth - 2],
-    ["tool-workshop", "Tool workshop", 2, worldDepth - 2],
-    ["merge-harbor", "Merge harbor", worldWidth / 2, worldDepth + 3.5],
+  const definitions: Array<[LandmarkKind, string]> = [
+    ["command-center", "Main command"],
+    ["testing-facility", "Testing"],
+    ["data-archive", "Data archive"],
+    ["tool-workshop", "Tool workshop"],
+    ["merge-harbor", "Merge harbor"],
+    ["review-center", "PR review navy"],
+    ["research-lab", "Research observatory"],
   ];
 
-  return definitions.map(([kind, label, x, z]) => ({
+  return definitions.map(([kind, label], index) => ({
     id: `landmark-${kind}`,
     kind,
     label,
-    position: { x, y: 0, z },
+    position: kind === "command-center"
+      ? { x: worldWidth / 2, y: 0, z: worldDepth / 2 }
+      : { x: 2 + index * 4, y: 0, z: worldDepth + 5 },
   }));
 }
 
@@ -118,12 +122,20 @@ export function generateCitySnapshot(input: WorldGeneratorInput): CitySnapshot {
   const changedPaths = new Set(input.report?.changedPaths ?? []);
   const filesBySector = groupBy(files, (file) => topLevel(file.path));
   const sectorNames = [...filesBySector.keys()].sort();
+  // Reserve square districts large enough for their file grids, including margins.
+  // Fixed sector sizes previously let dense directories spill into neighboring plots.
+  const sectorSize = Math.max(SECTOR_SIZE, ...[...filesBySector.values()].map((sectorFiles) => {
+    const groups = groupBy(sectorFiles, (file) => directory(file.path));
+    const districtColumns = Math.ceil(Math.sqrt(groups.size));
+    const fileColumns = Math.ceil(Math.sqrt(Math.max(...[...groups.values()].map((group) => group.length))));
+    return 2 + districtColumns * (fileColumns * PLOT_SPACING + 2);
+  }));
   const sectors: Sector[] = [];
   const districts: District[] = [];
   const buildings: Building[] = [];
 
   sectorNames.forEach((sectorPath, sectorIndex) => {
-    const bounds = boundsForSector(sectorIndex, sectorNames.length);
+    const bounds = boundsForSector(sectorIndex, sectorNames.length, sectorSize);
     const sectorId = `sector-${slug(sectorPath)}`;
     sectors.push({
       id: sectorId,
@@ -138,7 +150,7 @@ export function generateCitySnapshot(input: WorldGeneratorInput): CitySnapshot {
     districtPaths.forEach((districtPath, districtIndex) => {
       const districtId = `district-${slug(districtPath)}`;
       const districtColumns = Math.ceil(Math.sqrt(districtPaths.length));
-      const districtWidth = (SECTOR_SIZE - 2) / districtColumns;
+      const districtWidth = (sectorSize - 2) / districtColumns;
       const districtRow = Math.floor(districtIndex / districtColumns);
       const districtColumn = districtIndex % districtColumns;
       const districtBounds = {
@@ -156,7 +168,7 @@ export function generateCitySnapshot(input: WorldGeneratorInput): CitySnapshot {
       });
 
       const districtFiles = districtGroups.get(districtPath) ?? [];
-      const columns = Math.max(1, Math.floor(districtBounds.width / PLOT_SPACING));
+      const columns = Math.max(1, Math.ceil(Math.sqrt(districtFiles.length)));
       districtFiles.forEach((file, fileIndex) => {
         const row = Math.floor(fileIndex / columns);
         const column = fileIndex % columns;
@@ -187,8 +199,8 @@ export function generateCitySnapshot(input: WorldGeneratorInput): CitySnapshot {
   const columns = Math.ceil(Math.sqrt(Math.max(sectors.length, 1)));
   const rows = Math.ceil(Math.max(sectors.length, 1) / columns);
   const worldSize = {
-    width: columns * SECTOR_SIZE + Math.max(0, columns - 1) * SECTOR_GAP,
-    depth: rows * SECTOR_SIZE + Math.max(0, rows - 1) * SECTOR_GAP,
+    width: columns * sectorSize + Math.max(0, columns - 1) * SECTOR_GAP,
+    depth: rows * sectorSize + Math.max(0, rows - 1) * SECTOR_GAP,
   };
   const landmarks = createLandmarks(worldSize.width, worldSize.depth);
   const anchors: Anchor[] = buildings

@@ -41,3 +41,25 @@ describe("generateCitySnapshot", () => {
     expect(new Set(positions).size).toBe(positions.length);
   });
 });
+
+describe("dense repository layouts", () => {
+  it("keeps every footprint within its district and plots separate", () => {
+    const city = generateCitySnapshot({
+      id: "dense", repository: { name: "dense", revision: "test" },
+      files: Array.from({ length: 180 }, (_, index) => ({
+        path: `src/group-${index % 7}/file-${index}.ts`, language: "TypeScript",
+        kind: "source" as const, linesOfCode: 50, changeFrequency: 5, state: "idle" as const,
+      })),
+    });
+    for (const building of city.buildings) {
+      const bounds = city.districts.find((district) => district.id === building.districtId)!.bounds;
+      expect(building.position.x - building.footprint.width / 2).toBeGreaterThanOrEqual(bounds.x);
+      expect(building.position.z - building.footprint.depth / 2).toBeGreaterThanOrEqual(bounds.z);
+      expect(building.position.x + building.footprint.width / 2).toBeLessThanOrEqual(bounds.x + bounds.width);
+      expect(building.position.z + building.footprint.depth / 2).toBeLessThanOrEqual(bounds.z + bounds.depth);
+    }
+    expect(new Set(city.buildings.map(({ position }) => `${position.x}:${position.z}`)).size).toBe(180);
+    expect(city.landmarks.filter((landmark) => landmark.kind !== "command-center").every((landmark) => landmark.position.z > city.worldSize.depth)).toBe(true);
+    expect(city.landmarks.find((landmark) => landmark.kind === "command-center")?.position).toMatchObject({ x: city.worldSize.width / 2, z: city.worldSize.depth / 2 });
+  });
+});

@@ -43,7 +43,7 @@ export const fixtureReport = PublicReportSchema.parse({
       id: "section-viewer",
       eyebrow: "City viewer",
       title: "A real place for every file",
-      body: "The supplied pixel-art island is now the visual baseline, with repository files and evidence mapped onto its engineering districts.",
+      body: "Every file is an independent isometric building, with configurable designs by file type and a general building for unmapped types. Folders define the city districts.",
       status: "success",
       anchorId: "anchor-file-apps-web-components-citycanvas-tsx",
     },

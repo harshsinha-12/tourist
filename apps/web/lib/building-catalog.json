@@ -1,0 +1,920 @@
+[
+  {
+    "id": "javascript",
+    "name": "JavaScript",
+    "example": ".js",
+    "extensions": [
+      "js",
+      "mjs",
+      "cjs"
+    ],
+    "languages": [
+      "javascript"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Golden workshop"
+  },
+  {
+    "id": "jsx",
+    "name": "JSX",
+    "example": ".jsx",
+    "extensions": [
+      "jsx"
+    ],
+    "languages": [
+      "javascriptreact",
+      "jsx"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Component pavilion"
+  },
+  {
+    "id": "typescript",
+    "name": "TypeScript",
+    "example": ".ts",
+    "extensions": [
+      "ts",
+      "mts",
+      "cts"
+    ],
+    "languages": [
+      "typescript"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Blue headquarters"
+  },
+  {
+    "id": "tsx",
+    "name": "TSX",
+    "example": ".tsx",
+    "extensions": [
+      "tsx"
+    ],
+    "languages": [
+      "typescriptreact",
+      "tsx"
+    ],
+    "category": "JavaScript & TypeScript",
+    "title": "Interface institute"
+  },
+  {
+    "id": "html",
+    "name": "HTML",
+    "example": ".html",
+    "extensions": [
+      "html",
+      "htm"
+    ],
+    "languages": [
+      "html"
+    ],
+    "category": "Web & styling",
+    "title": "Markup hall"
+  },
+  {
+    "id": "css",
+    "name": "CSS",
+    "example": ".css",
+    "extensions": [
+      "css"
+    ],
+    "languages": [
+      "css"
+    ],
+    "category": "Web & styling",
+    "title": "Design atelier"
+  },
+  {
+    "id": "scss",
+    "name": "SCSS",
+    "example": ".scss",
+    "extensions": [
+      "scss"
+    ],
+    "languages": [
+      "scss"
+    ],
+    "category": "Web & styling",
+    "title": "Sass conservatory"
+  },
+  {
+    "id": "sass",
+    "name": "Sass",
+    "example": ".sass",
+    "extensions": [
+      "sass"
+    ],
+    "languages": [
+      "sass"
+    ],
+    "category": "Web & styling",
+    "title": "Pattern house"
+  },
+  {
+    "id": "less",
+    "name": "Less",
+    "example": ".less",
+    "extensions": [
+      "less"
+    ],
+    "languages": [
+      "less"
+    ],
+    "category": "Web & styling",
+    "title": "Style laboratory"
+  },
+  {
+    "id": "vue",
+    "name": "Vue",
+    "example": ".vue",
+    "extensions": [
+      "vue"
+    ],
+    "languages": [
+      "vue"
+    ],
+    "category": "Web & styling",
+    "title": "Garden pavilion"
+  },
+  {
+    "id": "svelte",
+    "name": "Svelte",
+    "example": ".svelte",
+    "extensions": [
+      "svelte"
+    ],
+    "languages": [
+      "svelte"
+    ],
+    "category": "Web & styling",
+    "title": "Animation studio"
+  },
+  {
+    "id": "astro",
+    "name": "Astro",
+    "example": ".astro",
+    "extensions": [
+      "astro"
+    ],
+    "languages": [
+      "astro"
+    ],
+    "category": "Web & styling",
+    "title": "Star observatory"
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "example": ".py",
+    "extensions": [
+      "py",
+      "pyi",
+      "pyw"
+    ],
+    "languages": [
+      "python"
+    ],
+    "category": "Languages",
+    "title": "Python observatory"
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "example": ".go",
+    "extensions": [
+      "go"
+    ],
+    "languages": [
+      "go",
+      "golang"
+    ],
+    "category": "Languages",
+    "title": "Dispatch station"
+  },
+  {
+    "id": "rust",
+    "name": "Rust",
+    "example": ".rs",
+    "extensions": [
+      "rs"
+    ],
+    "languages": [
+      "rust"
+    ],
+    "category": "Languages",
+    "title": "Precision foundry"
+  },
+  {
+    "id": "java",
+    "name": "Java",
+    "example": ".java",
+    "extensions": [
+      "java"
+    ],
+    "languages": [
+      "java"
+    ],
+    "category": "Languages",
+    "title": "Boiler works"
+  },
+  {
+    "id": "kotlin",
+    "name": "Kotlin",
+    "example": ".kt",
+    "extensions": [
+      "kt",
+      "kts"
+    ],
+    "languages": [
+      "kotlin"
+    ],
+    "category": "Languages",
+    "title": "Prism institute"
+  },
+  {
+    "id": "swift",
+    "name": "Swift",
+    "example": ".swift",
+    "extensions": [
+      "swift"
+    ],
+    "languages": [
+      "swift"
+    ],
+    "category": "Languages",
+    "title": "Flight studio"
+  },
+  {
+    "id": "dart",
+    "name": "Dart",
+    "example": ".dart",
+    "extensions": [
+      "dart"
+    ],
+    "languages": [
+      "dart"
+    ],
+    "category": "Languages",
+    "title": "Crystal workshop"
+  },
+  {
+    "id": "ruby",
+    "name": "Ruby",
+    "example": ".rb",
+    "extensions": [
+      "rb"
+    ],
+    "languages": [
+      "ruby"
+    ],
+    "category": "Languages",
+    "title": "Gem atelier"
+  },
+  {
+    "id": "php",
+    "name": "PHP",
+    "example": ".php",
+    "extensions": [
+      "php",
+      "phtml"
+    ],
+    "languages": [
+      "php"
+    ],
+    "category": "Languages",
+    "title": "Web exchange"
+  },
+  {
+    "id": "c",
+    "name": "C",
+    "example": ".c",
+    "extensions": [
+      "c"
+    ],
+    "languages": [
+      "c"
+    ],
+    "category": "Languages",
+    "title": "Systems plant"
+  },
+  {
+    "id": "cpp",
+    "name": "C++",
+    "example": ".cpp",
+    "extensions": [
+      "cpp",
+      "cc",
+      "cxx"
+    ],
+    "languages": [
+      "cpp",
+      "c++"
+    ],
+    "category": "Languages",
+    "title": "Assembly foundry"
+  },
+  {
+    "id": "header",
+    "name": "C header",
+    "example": ".h",
+    "extensions": [
+      "h",
+      "hpp",
+      "hxx"
+    ],
+    "languages": [
+      "c",
+      "header"
+    ],
+    "category": "Languages",
+    "title": "Blueprint office"
+  },
+  {
+    "id": "csharp",
+    "name": "C#",
+    "example": ".cs",
+    "extensions": [
+      "cs"
+    ],
+    "languages": [
+      "csharp",
+      "c#"
+    ],
+    "category": "Languages",
+    "title": "Octagon lab"
+  },
+  {
+    "id": "scala",
+    "name": "Scala",
+    "example": ".scala",
+    "extensions": [
+      "scala",
+      "sc"
+    ],
+    "languages": [
+      "scala"
+    ],
+    "category": "Languages",
+    "title": "Stepped academy"
+  },
+  {
+    "id": "lua",
+    "name": "Lua",
+    "example": ".lua",
+    "extensions": [
+      "lua"
+    ],
+    "languages": [
+      "lua"
+    ],
+    "category": "Languages",
+    "title": "Moon house"
+  },
+  {
+    "id": "elixir",
+    "name": "Elixir",
+    "example": ".ex",
+    "extensions": [
+      "ex",
+      "exs"
+    ],
+    "languages": [
+      "elixir"
+    ],
+    "category": "Languages",
+    "title": "Apothecary lab"
+  },
+  {
+    "id": "r",
+    "name": "R",
+    "example": ".r",
+    "extensions": [
+      "r"
+    ],
+    "languages": [
+      "r"
+    ],
+    "category": "Languages",
+    "title": "Statistics institute"
+  },
+  {
+    "id": "sql",
+    "name": "SQL",
+    "example": ".sql",
+    "extensions": [
+      "sql"
+    ],
+    "languages": [
+      "sql"
+    ],
+    "category": "Data & schemas",
+    "title": "Database vault"
+  },
+  {
+    "id": "graphql",
+    "name": "GraphQL",
+    "example": ".graphql",
+    "extensions": [
+      "graphql",
+      "gql"
+    ],
+    "languages": [
+      "graphql"
+    ],
+    "category": "Data & schemas",
+    "title": "Graph exchange"
+  },
+  {
+    "id": "prisma",
+    "name": "Prisma",
+    "example": ".prisma",
+    "extensions": [
+      "prisma"
+    ],
+    "languages": [
+      "prisma"
+    ],
+    "category": "Data & schemas",
+    "title": "Schema prism"
+  },
+  {
+    "id": "protobuf",
+    "name": "Protocol Buffers",
+    "example": ".proto",
+    "extensions": [
+      "proto"
+    ],
+    "languages": [
+      "protobuf",
+      "protocol",
+      "buffers"
+    ],
+    "category": "Data & schemas",
+    "title": "Protocol relay"
+  },
+  {
+    "id": "json",
+    "name": "JSON",
+    "example": ".json",
+    "extensions": [
+      "json",
+      "jsonc",
+      "json5"
+    ],
+    "languages": [
+      "json",
+      "jsonc"
+    ],
+    "category": "Data & schemas",
+    "title": "Record depot"
+  },
+  {
+    "id": "yaml",
+    "name": "YAML",
+    "example": ".yaml",
+    "extensions": [
+      "yaml",
+      "yml"
+    ],
+    "languages": [
+      "yaml"
+    ],
+    "category": "Data & schemas",
+    "title": "Manifest lodge"
+  },
+  {
+    "id": "toml",
+    "name": "TOML",
+    "example": ".toml",
+    "extensions": [
+      "toml"
+    ],
+    "languages": [
+      "toml"
+    ],
+    "category": "Data & schemas",
+    "title": "Settings house"
+  },
+  {
+    "id": "xml",
+    "name": "XML",
+    "example": ".xml",
+    "extensions": [
+      "xml",
+      "xsd",
+      "xsl",
+      "xslt"
+    ],
+    "languages": [
+      "xml"
+    ],
+    "category": "Data & schemas",
+    "title": "Archive arcade"
+  },
+  {
+    "id": "csv",
+    "name": "CSV",
+    "example": ".csv",
+    "extensions": [
+      "csv",
+      "tsv"
+    ],
+    "languages": [
+      "csv"
+    ],
+    "category": "Data & schemas",
+    "title": "Ledger market"
+  },
+  {
+    "id": "markdown",
+    "name": "Markdown",
+    "example": ".md",
+    "extensions": [
+      "md",
+      "markdown"
+    ],
+    "languages": [
+      "markdown"
+    ],
+    "category": "Documentation",
+    "title": "Reading library"
+  },
+  {
+    "id": "mdx",
+    "name": "MDX",
+    "example": ".mdx",
+    "extensions": [
+      "mdx"
+    ],
+    "languages": [
+      "mdx"
+    ],
+    "category": "Documentation",
+    "title": "Interactive library"
+  },
+  {
+    "id": "rst",
+    "name": "reStructuredText",
+    "example": ".rst",
+    "extensions": [
+      "rst"
+    ],
+    "languages": [
+      "restructuredtext"
+    ],
+    "category": "Documentation",
+    "title": "Reference archive"
+  },
+  {
+    "id": "text",
+    "name": "Text",
+    "example": ".txt",
+    "extensions": [
+      "txt",
+      "text"
+    ],
+    "languages": [
+      "text",
+      "plaintext"
+    ],
+    "category": "Documentation",
+    "title": "Writers cottage"
+  },
+  {
+    "id": "pdf",
+    "name": "PDF",
+    "example": ".pdf",
+    "extensions": [
+      "pdf"
+    ],
+    "languages": [
+      "pdf"
+    ],
+    "category": "Documentation",
+    "title": "Publishing house"
+  },
+  {
+    "id": "shell",
+    "name": "Shell",
+    "example": ".sh",
+    "extensions": [
+      "sh",
+      "bash",
+      "zsh",
+      "fish"
+    ],
+    "languages": [
+      "shell",
+      "bash"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Terminal station"
+  },
+  {
+    "id": "powershell",
+    "name": "PowerShell",
+    "example": ".ps1",
+    "extensions": [
+      "ps1",
+      "psm1",
+      "psd1"
+    ],
+    "languages": [
+      "powershell"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Automation office"
+  },
+  {
+    "id": "batch",
+    "name": "Batch",
+    "example": ".bat",
+    "extensions": [
+      "bat",
+      "cmd"
+    ],
+    "languages": [
+      "batch"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Batch depot"
+  },
+  {
+    "id": "terraform",
+    "name": "Terraform",
+    "example": ".tf",
+    "extensions": [
+      "tf",
+      "tfvars"
+    ],
+    "languages": [
+      "terraform",
+      "hcl"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Terrain works"
+  },
+  {
+    "id": "docker",
+    "name": "Docker",
+    "example": "Dockerfile",
+    "extensions": [],
+    "languages": [
+      "dockerfile",
+      "docker"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Container workshop"
+  },
+  {
+    "id": "makefile",
+    "name": "Makefile",
+    "example": "Makefile",
+    "extensions": [],
+    "languages": [
+      "makefile",
+      "make"
+    ],
+    "category": "Scripts & infrastructure",
+    "title": "Build forge"
+  },
+  {
+    "id": "svg",
+    "name": "SVG",
+    "example": ".svg",
+    "extensions": [
+      "svg"
+    ],
+    "languages": [
+      "svg"
+    ],
+    "category": "Images & design",
+    "title": "Vector atelier"
+  },
+  {
+    "id": "png",
+    "name": "PNG",
+    "example": ".png",
+    "extensions": [
+      "png"
+    ],
+    "languages": [
+      "png"
+    ],
+    "category": "Images & design",
+    "title": "Pixel studio"
+  },
+  {
+    "id": "jpeg",
+    "name": "JPEG",
+    "example": ".jpg",
+    "extensions": [
+      "jpg",
+      "jpeg"
+    ],
+    "languages": [
+      "jpeg"
+    ],
+    "category": "Images & design",
+    "title": "Photo house"
+  },
+  {
+    "id": "webp",
+    "name": "WebP",
+    "example": ".webp",
+    "extensions": [
+      "webp"
+    ],
+    "languages": [
+      "webp"
+    ],
+    "category": "Images & design",
+    "title": "Imaging lab"
+  },
+  {
+    "id": "gif",
+    "name": "GIF",
+    "example": ".gif",
+    "extensions": [
+      "gif"
+    ],
+    "languages": [
+      "gif"
+    ],
+    "category": "Images & design",
+    "title": "Motion workshop"
+  },
+  {
+    "id": "ico",
+    "name": "Icon",
+    "example": ".ico",
+    "extensions": [
+      "ico",
+      "icns"
+    ],
+    "languages": [
+      "icon"
+    ],
+    "category": "Images & design",
+    "title": "Miniature atelier"
+  },
+  {
+    "id": "mp3",
+    "name": "MP3",
+    "example": ".mp3",
+    "extensions": [
+      "mp3"
+    ],
+    "languages": [
+      "mp3"
+    ],
+    "category": "Media & fonts",
+    "title": "Music house"
+  },
+  {
+    "id": "wav",
+    "name": "WAV",
+    "example": ".wav",
+    "extensions": [
+      "wav",
+      "aiff"
+    ],
+    "languages": [
+      "wav"
+    ],
+    "category": "Media & fonts",
+    "title": "Sound laboratory"
+  },
+  {
+    "id": "mp4",
+    "name": "MP4",
+    "example": ".mp4",
+    "extensions": [
+      "mp4",
+      "mov"
+    ],
+    "languages": [
+      "mp4"
+    ],
+    "category": "Media & fonts",
+    "title": "Cinema studio"
+  },
+  {
+    "id": "webm",
+    "name": "WebM",
+    "example": ".webm",
+    "extensions": [
+      "webm"
+    ],
+    "languages": [
+      "webm"
+    ],
+    "category": "Media & fonts",
+    "title": "Streaming station"
+  },
+  {
+    "id": "woff",
+    "name": "WOFF",
+    "example": ".woff",
+    "extensions": [
+      "woff",
+      "woff2"
+    ],
+    "languages": [
+      "woff"
+    ],
+    "category": "Media & fonts",
+    "title": "Type foundry"
+  },
+  {
+    "id": "ttf",
+    "name": "TrueType",
+    "example": ".ttf",
+    "extensions": [
+      "ttf",
+      "otf"
+    ],
+    "languages": [
+      "truetype"
+    ],
+    "category": "Media & fonts",
+    "title": "Letterpress house"
+  },
+  {
+    "id": "notebook",
+    "name": "Jupyter",
+    "example": ".ipynb",
+    "extensions": [
+      "ipynb"
+    ],
+    "languages": [
+      "jupyter"
+    ],
+    "category": "Repository essentials",
+    "title": "Notebook observatory"
+  },
+  {
+    "id": "gitignore",
+    "name": "Git ignore",
+    "example": ".gitignore",
+    "extensions": [],
+    "languages": [
+      "gitignore"
+    ],
+    "category": "Repository essentials",
+    "title": "Gatehouse"
+  },
+  {
+    "id": "environment",
+    "name": "Environment",
+    "example": ".env",
+    "extensions": [],
+    "languages": [
+      "dotenv"
+    ],
+    "category": "Repository essentials",
+    "title": "Environment vault"
+  },
+  {
+    "id": "lockfile",
+    "name": "Dependency lock",
+    "example": "package-lock.json",
+    "extensions": [],
+    "languages": [
+      "lockfile"
+    ],
+    "category": "Repository essentials",
+    "title": "Dependency vault"
+  },
+  {
+    "id": "license",
+    "name": "License",
+    "example": "LICENSE",
+    "extensions": [],
+    "languages": [
+      "license"
+    ],
+    "category": "Repository essentials",
+    "title": "Charter hall"
+  },
+  {
+    "id": "test",
+    "name": "Tests",
+    "example": "app.test.ts",
+    "extensions": [],
+    "languages": [
+      "test"
+    ],
+    "category": "Repository essentials",
+    "title": "Testing facility"
+  },
+  {
+    "id": "generic",
+    "name": "Other files",
+    "example": "unknown.file",
+    "extensions": [],
+    "languages": [],
+    "category": "Repository essentials",
+    "title": "General workshop"
+  }
+]
