@@ -1,15 +1,19 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { cache } from "react";
 import { PublicReportSchema, type PublicReport } from "@tourist/protocol";
 import { generateCitySnapshot } from "@tourist/world-generator";
-import { scanLocalRepository } from "./scan-local-repo";
+import { resolveRepositoryRoot, scanLocalRepository } from "./scan-local-repo";
+import { loadGitHubRepositoryReport } from "./github-report";
 
-const execFileAsync = promisify(execFile);
-const REPORT_ID = "tourist-city-foundation";
+export const LOCAL_REPORT_ID = "tourist-city-foundation";
+const SPARSE_SCAN = 8;
 
-export async function loadLocalRepositoryReport(): Promise<PublicReport> {
-  const root = await repositoryRoot();
+export const loadLocalRepositoryReport = cache(async (): Promise<PublicReport> => {
+  const root = await resolveRepositoryRoot();
   const { name, revision, files, changedPaths } = await scanLocalRepository(root);
+  if (files.length < SPARSE_SCAN) {
+    const fallback = await githubIslandFallback();
+    if (fallback) return fallback;
+  }
   const snapshot = generateCitySnapshot({
     id: "tourist-local-v1",
     repository: { name, revision },
@@ -27,7 +31,7 @@ export async function loadLocalRepositoryReport(): Promise<PublicReport> {
   });
   const sectors = snapshot.sectors.map((sector) => sector.name).join(", ");
   return PublicReportSchema.parse({
-    id: REPORT_ID,
+    id: LOCAL_REPORT_ID,
     title: `${name} as a city`,
     summary: `${snapshot.buildings.length} source files are on the island, grouped into ${snapshot.sectors.length} sectors (${sectors || "root"}). Gitignored paths, images, and generated sprites stay off the map.`,
     createdAt: new Date().toISOString(),
@@ -67,18 +71,20 @@ export async function loadLocalRepositoryReport(): Promise<PublicReport> {
       },
     ],
   });
-}
+});
 
 export function createRepositoryReport(report: PublicReport): PublicReport {
   return PublicReportSchema.parse(report);
 }
 
-async function repositoryRoot(): Promise<string> {
-  const start = process.cwd();
+async function githubIslandFallback(): Promise<PublicReport | undefined> {
+  const owner = process.env.VERCEL_GIT_REPO_OWNER;
+  const repo = process.env.VERCEL_GIT_REPO_SLUG;
+  if (!owner || !repo) return undefined;
   try {
-    const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8" });
-    return stdout.trim() || start;
+    const report = await loadGitHubRepositoryReport(owner, repo);
+    return PublicReportSchema.parse({ ...report, id: LOCAL_REPORT_ID });
   } catch {
-    return start;
+    return undefined;
   }
 }

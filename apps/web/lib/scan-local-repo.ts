@@ -1,12 +1,31 @@
 import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join, parse } from "node:path";
 import { promisify } from "node:util";
 import { inventoryFromPaths, shouldIncludePath } from "@tourist/world-generator";
 import type { BuildingState, RepositoryFile } from "@tourist/protocol";
 
 const execFileAsync = promisify(execFile);
 const MAX_BYTES = 2_000_000;
+const ROOT_MARKERS = ["pnpm-workspace.yaml", ".git"];
+
+export async function resolveRepositoryRoot(start = process.cwd()): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8" });
+    if (stdout.trim()) return stdout.trim();
+  } catch {
+    // Serverless hosts often have no git metadata; walk up for a workspace marker instead.
+  }
+  let current = start;
+  const { root } = parse(current);
+  while (true) {
+    if (ROOT_MARKERS.some((marker) => existsSync(join(current, marker)))) return current;
+    const parent = dirname(current);
+    if (parent === current || current === root) return start;
+    current = parent;
+  }
+}
 
 export async function scanLocalRepository(root: string): Promise<{
   name: string;
@@ -34,10 +53,12 @@ async function listPaths(root: string): Promise<string[]> {
     const { stdout } = await execFileAsync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
       cwd: root, encoding: "utf8", maxBuffer: 20_000_000,
     });
-    return stdout.split("\0").filter(Boolean);
+    const fromGit = stdout.split("\0").filter(Boolean);
+    if (fromGit.length > 0) return fromGit;
   } catch {
-    return walk(root, root);
+    // Fall through to a filesystem walk when git is missing (Vercel serverless).
   }
+  return walk(root, root);
 }
 
 async function walk(root: string, directory: string): Promise<string[]> {
