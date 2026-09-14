@@ -7,6 +7,7 @@ import { EnvironmentSprite, type EnvironmentAsset } from "./EnvironmentSprite";
 import { LandmarkSprite, type CustomLandmarkAsset } from "./LandmarkSprite";
 import { createCityScene, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib/city-scene";
 import { createCityMap } from "../lib/city-map";
+import { CityTraffic } from "./CityTraffic";
 
 interface CityCanvasProps {
   snapshot: CitySnapshot;
@@ -207,16 +208,12 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
                 <polygon points={scene.polygon({ z: p.z + sign * .95, x: p.x - .32 + n * .18, depth: .4, width: .08 })} fill="#f0eee0" />
               </g>)))}
           </g>
-          <g className="city-traffic" aria-hidden="true">
-            {allRoadRoutes.filter(([a, b]) => Math.hypot(b.x - a.x, b.y - a.y) > 300).slice(0, 8).map(([from, to], index) => <image key={index} href={`/assets/environment/${index === 1 ? "delivery-van" : "compact-car"}.webp`} x={-34} y={-34} width="68" height="68" preserveAspectRatio="xMidYMid meet">
-              <animateMotion dur={`${13 + index * 4}s`} repeatCount="indefinite" rotate="0" path={`M${from.x} ${from.y}L${to.x} ${to.y}`} />
-            </image>)}
-          </g>
           <g className="city-ships" aria-hidden="true">
             <image href="/assets/environment/cargo-ship.webp" x={-82} y={-48} width="164" height="96" preserveAspectRatio="xMidYMid meet"><animateMotion dur="30s" repeatCount="indefinite" path={`M${scene.project(0, scene.maxZ + 4).x} ${scene.project(0, scene.maxZ + 4).y}L${scene.project(scene.maxX + 4, scene.maxZ + 4).x} ${scene.project(scene.maxX + 4, scene.maxZ + 4).y}`} /></image>
             <image href="/assets/environment/speedboat.webp" x={-70} y={-44} width="140" height="88" preserveAspectRatio="xMidYMid meet"><animateMotion dur="22s" repeatCount="indefinite" path={`M${scene.project(scene.maxX + 4, 0).x} ${scene.project(scene.maxX + 4, 0).y}L${scene.project(scene.maxX + 4, scene.maxZ + 4).x} ${scene.project(scene.maxX + 4, scene.maxZ + 4).y}`} /></image>
           </g>
         </svg>
+        <CityTraffic map={map} scene={scene} />
         <div className="operation-marker airbase-marker" style={{ left: scene.project(map.airbase.x, map.airbase.z).x, top: scene.project(map.airbase.x, map.airbase.z).y, zIndex: Math.round((map.airbase.x + map.airbase.z) * 10) + 100 }}>
           <button type="button" onClick={() => onOpenOperation?.("airbase")} aria-label="Open the repository airbase and import a repository">
             <LandmarkSprite asset="airbase" className="airbase-art" />

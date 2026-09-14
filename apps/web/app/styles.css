@@ -296,7 +296,8 @@ button, input { font: inherit; }
 .city-roads .city-street path:first-child { stroke: #d9d0a7; stroke-width: 30; }
 .city-roads .city-street .road-surface { stroke: #627978; stroke-width: 22; stroke-dasharray: none; opacity: 1; }
 .city-roads .city-street .road-markings { stroke: #ede4be; stroke-width: 2; stroke-dasharray: 9 12; opacity: .85; }
-.city-traffic { pointer-events: none; }
+.city-traffic { position: absolute; inset: 0; pointer-events: none; }
+.city-car { position: absolute; width: 52px; height: auto; pointer-events: none; user-select: none; transform-origin: 50% 78%; image-rendering: auto; }
 .builder-pawn { z-index: 10000; }
 .builder-pawn-idle { animation: none; }
 
