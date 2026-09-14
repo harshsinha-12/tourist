@@ -72,6 +72,8 @@ export function createCityMap(snapshot: CitySnapshot) {
   }
   for (let offset = 2; offset < width - 1; offset += 2.8) {
     plant(offset, 2, .85, "conifer"); plant(offset, depth - 2, .65);
+  }
+  for (let offset = 2; offset < depth - 1; offset += 2.8) {
     plant(2, offset, .65); plant(width - 2, offset, .65);
   }
   decorations.push({ x: width - 1.3, z: depth - 1.3, asset: "lighthouse", width: 130 });

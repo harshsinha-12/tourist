@@ -22,6 +22,10 @@ describe("city placement", () => {
       expect(Math.min(...map.streets.map(s => distance(building.position.x, building.position.z, s)))).toBeLessThanOrEqual(2.21);
     }
     for (const tree of map.trees) {
+      expect(tree.x).toBeGreaterThanOrEqual(0);
+      expect(tree.x).toBeLessThanOrEqual(city.worldSize.width);
+      expect(tree.z).toBeGreaterThanOrEqual(0);
+      expect(tree.z).toBeLessThanOrEqual(city.worldSize.depth);
       expect(map.streets.every(s => distance(tree.x, tree.z, s) >= .72)).toBe(true);
       expect(city.buildings.every(b => Math.abs(tree.x - b.position.x) >= 1.15 || Math.abs(tree.z - b.position.z) >= 1.15)).toBe(true);
     }
