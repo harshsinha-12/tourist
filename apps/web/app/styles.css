@@ -298,6 +298,10 @@ button, input { font: inherit; }
 .city-roads .city-street .road-markings { stroke: #ede4be; stroke-width: 2; stroke-dasharray: 9 12; opacity: .85; }
 .city-traffic { position: absolute; inset: 0; pointer-events: none; }
 .city-car { position: absolute; width: 52px; height: auto; pointer-events: none; user-select: none; transform-origin: 50% 78%; image-rendering: auto; }
+.city-ships { position: absolute; inset: 0; pointer-events: none; }
+.city-ship { position: absolute; height: auto; pointer-events: none; user-select: none; transform-origin: 50% 72%; image-rendering: auto; }
+.city-ship.cargo-ship { width: 128px; }
+.city-ship.speedboat { width: 92px; }
 .builder-pawn { z-index: 10000; }
 .builder-pawn-idle { animation: none; }
 
