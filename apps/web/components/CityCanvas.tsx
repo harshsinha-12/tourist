@@ -56,7 +56,7 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     const scale = Math.max(MIN_ZOOM, Math.min(1, 960 / scene.width, 630 / scene.height));
     return { x: (1000 - scene.width * scale) / 2, y: (700 - scene.height * scale) / 2, scale };
   });
-  const [showLabels, setShowLabels] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
   const [hoveredBlockId, setHoveredBlockId] = useState<string>();
   const drag = useRef<{ x: number; y: number; origin: Camera; moved: boolean } | null>(null);
   const suppressClick = useRef(false);

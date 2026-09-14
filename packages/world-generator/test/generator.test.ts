@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RepositoryFile } from "@tourist/protocol";
 import { generateCitySnapshot } from "../src/index";
-import { BLOCK_SIZE } from "../src/layout";
 
 const files: RepositoryFile[] = [
   { path: "apps/web/app/page.tsx", language: "TypeScript", kind: "source", linesOfCode: 120, changeFrequency: 4, state: "idle" },
@@ -58,7 +57,8 @@ describe("dense repository layouts", () => {
       expect(city.worldSize.width * city.worldSize.depth).toBeGreaterThanOrEqual(area);
       area = city.worldSize.width * city.worldSize.depth;
       expect(city.layout!.blocks.filter(b => b.use === "files")).toHaveLength(Math.ceil(count / 4));
-      expect(city.layout!.columns).toBe(city.layout!.rows);
+      expect(city.layout!.columns % 2).toBe(1);
+      expect(city.layout!.rows % 2).toBe(1);
       for (const building of city.buildings) {
         const blocks = city.layout!.blocks.filter(b => b.use === "files" && building.position.x > b.bounds.x && building.position.x < b.bounds.x + b.bounds.width
           && building.position.z > b.bounds.z && building.position.z < b.bounds.z + b.bounds.depth);
@@ -84,8 +84,8 @@ describe("dense repository layouts", () => {
     expect(new Set(city.buildings.map(({ position }) => `${position.x}:${position.z}`)).size).toBe(180);
     expect(city.landmarks.every(({ position }) => position.x >= 0 && position.x <= city.worldSize.width && position.z >= 0 && position.z <= city.worldSize.depth)).toBe(true);
     const hall = city.landmarks.find(l => l.kind === "command-center")!;
-    expect(Math.abs(hall.position.x - city.worldSize.width / 2)).toBeLessThan(BLOCK_SIZE);
-    expect(Math.abs(hall.position.z - city.worldSize.depth / 2)).toBeLessThan(BLOCK_SIZE);
+    expect(hall.position.x).toBe(city.worldSize.width / 2);
+    expect(hall.position.z).toBe(city.worldSize.depth / 2);
     expect(city.buildings.every(b => Math.abs(b.position.x - hall.position.x) >= 3 || Math.abs(b.position.z - hall.position.z) >= 3)).toBe(true);
   });
 
