@@ -220,15 +220,18 @@ button, input { font: inherit; }
 .city-piers circle { animation: lamp-flicker 4s steps(3, end) infinite; }
 .city-lamps circle { animation: lamp-flicker 3.7s steps(3, end) infinite; }
 .city-lamps g:nth-child(3n) circle { animation-delay: -1.4s; }
-.city-cloud { animation: cloud-drift 34s linear infinite; }
-.cloud-two { animation-duration: 43s; animation-delay: -17s; }
+.city-cloud { position: absolute; left: 0; top: 0; pointer-events: none; offset-rotate: 0deg; animation: cloud-orbit linear infinite; z-index: 12000; }
+.city-cloud.is-reverse { animation-direction: reverse; }
+.city-cloud img { display: block; height: auto; pointer-events: none; user-select: none; translate: -50% -70%; animation: cloud-bob ease-in-out infinite; filter: drop-shadow(1px 2px 0 #d7eef355); }
+.city-clouds { position: absolute; inset: 0; pointer-events: none; }
 .city-birds path { fill: none; stroke: #e3f4eb; stroke-width: 3; stroke-linecap: round; opacity: .75; animation: bird-flight 18s linear infinite; }
 .city-birds path + path { animation-delay: -8s; }
 .city-car, .city-ship { filter: drop-shadow(2px 3px 0 #102e3b88); }
 .city-ship path { vector-effect: non-scaling-stroke; }
 @keyframes water-shimmer { 50% { opacity: .12; transform: translateX(6px); } }
 @keyframes lamp-flicker { 50% { opacity: .7; } 53% { opacity: 1; } }
-@keyframes cloud-drift { from { transform: translateX(-40px); } to { transform: translateX(80px); } }
+@keyframes cloud-orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes cloud-bob { 0%, 100% { translate: -50% -70%; } 35% { translate: -44% -62%; } 70% { translate: -56% -80%; } }
 @keyframes bird-flight { from { transform: translateX(-80px) translateY(10px); } to { transform: translateX(160px) translateY(-20px); } }
 @keyframes vehicle-loop-one { 0%, 100% { translate: -50% -100%; } 45% { translate: calc(-50% + 115px) calc(-100% - 20px); } 55% { translate: calc(-50% + 115px) calc(-100% - 20px); } }
 @keyframes vehicle-loop-two { 0%, 100% { translate: -50% -100%; } 42% { translate: calc(-50% - 95px) calc(-100% + 30px); } 60% { translate: calc(-50% - 95px) calc(-100% + 30px); } }
@@ -277,7 +280,7 @@ button, input { font: inherit; }
 @keyframes worker-hammer { 50% { translate: 2px 2px; rotate: -3deg; } }
 @keyframes worker-idle { 50% { translate: -50% calc(-100% - 3px); } }
 @media (max-width: 700px) { .operation-backdrop { padding: 10px; }.operation-modal { max-height: 95vh; }.operation-header { padding: 18px 18px 14px; }.operation-title-row h2 { font-size: 19px; }.operation-search, .operation-list { margin-left: 14px; margin-right: 14px; padding-left: 0; padding-right: 0; }.operation-footer { padding-left: 14px; padding-right: 14px; }.operation-card { grid-template-columns: 40px 1fr; }.operation-card b { grid-column: 2; }.operation-command { padding-left: 14px; padding-right: 14px; }.operation-command .operation-footer { margin-left: -14px; margin-right: -14px; } }
-@media (prefers-reduced-motion: reduce) { .builder-pawn, .builder-sprite { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .builder-pawn, .builder-sprite, .city-cloud, .city-cloud img { animation: none; } .city-cloud { offset-distance: 32%; } }
 
 /* Plot baselines and street furniture share the map's depth order. */
 .city-landmark { width: 235px; height: 235px; translate: -50% -96%; }

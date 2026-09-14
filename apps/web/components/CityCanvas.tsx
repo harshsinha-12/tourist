@@ -9,6 +9,7 @@ import { createCityScene, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib
 import { createCityMap } from "../lib/city-map";
 import { CityTraffic } from "./CityTraffic";
 import { CityShips } from "./CityShips";
+import { CityClouds } from "./CityClouds";
 
 interface CityCanvasProps {
   snapshot: CitySnapshot;
@@ -227,9 +228,8 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
             x={decoration.x} z={decoration.z} width={decoration.width}
             style={{ zIndex: Math.round((decoration.x + decoration.z) * 10) + 100 }} />)}
           {trees.map((tree, index) => <SceneSprite key={`tree-${index}`} asset={tree.asset} scene={scene} x={tree.x} z={tree.z} width={Math.round(tree.size * 90)} className="environment-tree" style={{ zIndex: Math.round((tree.x + tree.z) * 10) + 100 }} />)}
-          <SceneSprite asset="cloud" scene={scene} x={-3} z={scene.maxZ * .4} width={150} className="environment-cloud cloud-drift-one" />
-          <SceneSprite asset="cloud" scene={scene} x={scene.maxX + 4} z={scene.maxZ * .3} width={120} className="environment-cloud cloud-drift-two" />
         </div>
+        <CityClouds scene={scene} />
         {drawables.map((item) => {
           const point = scene.targets.get(item.id)!;
           return <div className={`city-plot ${"landmark" in item ? `city-landmark landmark-${item.landmark.kind}` : ""} ${focusId===item.id ? "is-active" : ""}`} key={item.id} style={{ left: point.x, top: point.y, zIndex: Math.round((item.position.x + item.position.z) * 10) + 100 }}>
