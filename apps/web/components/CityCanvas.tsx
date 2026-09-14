@@ -19,6 +19,7 @@ interface CityCanvasProps {
   editingBuildingIds?: readonly string[];
   onSelectLandmark?: (landmark: Landmark) => void;
   onOpenOperation?: (operation: "airbase" | "skill-port" | "pr-base" | "command") => void;
+  chrome?: boolean;
 }
 
 const landmarkArtwork: Record<LandmarkKind, EnvironmentAsset | CustomLandmarkAsset> = {
@@ -45,7 +46,7 @@ function SceneSprite({ asset, scene, x, z, width, className = "", style }: {
   return <EnvironmentSprite asset={asset} className={className} style={{ left: point.x, top: point.y, width, ...style }} />;
 }
 
-export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSelectBuilding, editingBuildingIds = [], onSelectLandmark, onOpenOperation }: CityCanvasProps) {
+export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSelectBuilding, editingBuildingIds = [], onSelectLandmark, onOpenOperation, chrome = true }: CityCanvasProps) {
   const scene = useMemo(() => createCityScene(snapshot), [snapshot]);
   const map = useMemo(() => createCityMap(snapshot), [snapshot]);
   const trees = map.trees;
@@ -267,13 +268,13 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
         {snapshot.buildings.length===0 && <div className="city-empty" style={{ left: scene.width/2, top: scene.height/2 }}>No files in this snapshot</div>}
       </div>
     </div>
-    <div className="map-controls glass-panel" aria-label="Map controls">
+    {chrome && <div className="map-controls glass-panel" aria-label="Map controls">
       <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*1.25))} disabled={camera.scale>=MAX_ZOOM} type="button">+</button>
       <span className="map-zoom">{Math.round(camera.scale*100)}%</span>
       <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*.8))} disabled={camera.scale<=MIN_ZOOM} type="button">−</button>
       <button onClick={fit} type="button">Fit island</button>
       <button onClick={() => setShowLabels((value) => !value)} aria-pressed={showLabels} type="button">File names</button>
-    </div>
-    <div className="map-hint">DRAG TO EXPLORE · SCROLL TO ZOOM · SELECT A BUILDING</div>
+    </div>}
+    {chrome && <div className="map-hint">DRAG TO EXPLORE · SCROLL TO ZOOM · SELECT A BUILDING</div>}
   </div>;
 }

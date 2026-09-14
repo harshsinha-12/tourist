@@ -39,13 +39,14 @@ export function projectedLoopPath(
   if (screen.length < 3) return "";
   const count = screen.length;
   const at = (index: number) => screen[(index + count) % count]!;
+  const fmt = (value: number) => value.toFixed(2);
   const curves = screen.map((_, index) => {
     const previous = at(index - 1), current = at(index), next = at(index + 1), after = at(index + 2);
     const c1x = current.x + (next.x - previous.x) / 6;
     const c1y = current.y + (next.y - previous.y) / 6;
     const c2x = next.x - (after.x - current.x) / 6;
     const c2y = next.y - (after.y - current.y) / 6;
-    return `C${c1x} ${c1y} ${c2x} ${c2y} ${next.x} ${next.y}`;
+    return `C ${fmt(c1x)} ${fmt(c1y)} ${fmt(c2x)} ${fmt(c2y)} ${fmt(next.x)} ${fmt(next.y)}`;
   });
-  return `M${screen[0]!.x} ${screen[0]!.y} ${curves.join(" ")}`;
+  return `M ${fmt(screen[0]!.x)} ${fmt(screen[0]!.y)} ${curves.join(" ")}`;
 }

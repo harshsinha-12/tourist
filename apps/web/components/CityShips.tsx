@@ -11,8 +11,15 @@ import {
   spriteFacing,
   type Ship,
 } from "../lib/shipping";
+import { seededRandom } from "../lib/traffic";
 import type { createCityScene } from "../lib/city-scene";
 import type { GroundPoint } from "../lib/city-map";
+
+const CARGO_SPECS = [{ asset: "cargo-ship" as const, speed: 1.15 }];
+const BOAT_SPECS = [
+  { asset: "speedboat" as const, speed: 2.4 },
+  { asset: "speedboat" as const, speed: 2.85 },
+];
 
 export function CityShips({ scene, harbor, navy }: {
   scene: ReturnType<typeof createCityScene>;
@@ -28,20 +35,14 @@ export function CityShips({ scene, harbor, navy }: {
     () => createShippingLane(scene.maxX, scene.maxZ, docks, 2.6, 1.25),
     [scene.maxX, scene.maxZ, docks],
   );
-  const [cargo, setCargo] = useState<Ship[]>(() => spawnShips(cargoLane, [{ asset: "cargo-ship", speed: 1.15 }]));
-  const [boats, setBoats] = useState<Ship[]>(() => spawnShips(boatLane, [
-    { asset: "speedboat", speed: 2.4 },
-    { asset: "speedboat", speed: 2.85 },
-  ]));
+  const [cargo, setCargo] = useState<Ship[]>(() => spawnShips(cargoLane, CARGO_SPECS, seededRandom(2)));
+  const [boats, setBoats] = useState<Ship[]>(() => spawnShips(boatLane, BOAT_SPECS, seededRandom(3)));
 
   useEffect(() => {
-    setCargo(spawnShips(cargoLane, [{ asset: "cargo-ship", speed: 1.15 }]));
+    setCargo(spawnShips(cargoLane, CARGO_SPECS, seededRandom(2)));
   }, [cargoLane]);
   useEffect(() => {
-    setBoats(spawnShips(boatLane, [
-      { asset: "speedboat", speed: 2.4 },
-      { asset: "speedboat", speed: 2.85 },
-    ]));
+    setBoats(spawnShips(boatLane, BOAT_SPECS, seededRandom(3)));
   }, [boatLane]);
 
   useEffect(() => {

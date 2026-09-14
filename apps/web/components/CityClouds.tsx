@@ -9,6 +9,7 @@ export function CityClouds({ scene }: { scene: ReturnType<typeof createCityScene
       return <div
         key={index}
         className={`city-cloud ${route.reverse ? "is-reverse" : ""}`}
+        suppressHydrationWarning
         style={{
           offsetPath: `path("${path}")`,
           animationDuration: route.duration,

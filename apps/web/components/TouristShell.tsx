@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Building, PublicReport } from "@tourist/protocol";
 import Link from "next/link";
+import { BrandMark } from "./BrandMark";
 import { getBuildingArchetype } from "./buildings/registry";
 import { CityCanvas } from "./CityCanvas";
 import { OperationsModal, type CityOperation } from "./OperationsModal";
@@ -30,7 +31,7 @@ export function TouristShell({ report }: { report: PublicReport }) {
     <main className="tourist-shell">
       <header className="topbar">
         <a className="brand" href="/" aria-label="Tourist home">
-          <span className="brand-mark">T</span>
+          <BrandMark />
           <span>TOURIST</span>
         </a>
         <div className="repo-chip">

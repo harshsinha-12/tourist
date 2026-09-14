@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { BrandMark } from "../BrandMark";
 import { buildingArchetypes, getBuildingArchetype } from "./registry";
 import type { BuildingArchetype } from "./types";
 
@@ -20,7 +21,7 @@ export function BuildingGallery() {
 
   return <main className="building-gallery">
     <header className="gallery-header">
-      <Link className="brand" href="/"><span className="brand-mark">T</span>TOURIST</Link>
+      <Link className="brand" href="/"><BrandMark /><span>TOURIST</span></Link>
       <span className="gallery-edition">THE ARCHITECTURE COLLECTION · VOL. 01</span>
       <Link className="gallery-back" href="/">Explore the city ↗</Link>
     </header>

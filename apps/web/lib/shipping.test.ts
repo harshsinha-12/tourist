@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateCitySnapshot } from "@tourist/world-generator";
 import { advanceShips, createShippingLane, shipPose, shipSpriteSrc, spawnShips, type Ship } from "./shipping";
+import { seededRandom } from "./traffic";
 
 function city() {
   return generateCitySnapshot({
@@ -22,8 +23,7 @@ describe("coastal shipping", () => {
     expect(lane.berths.size).toBe(2);
     expect([...lane.graph.nodes.values()].every((node) => node.neighbors.length > 0)).toBe(true);
 
-    let random = 0;
-    const next = () => (random = (random * 9301 + 49297) % 233280) / 233280;
+    const next = seededRandom(0);
     let ships = spawnShips(lane, [
       { asset: "cargo-ship", speed: 1.2 },
       { asset: "speedboat", speed: 2.5 },
@@ -47,6 +47,19 @@ describe("coastal shipping", () => {
       const pose = shipPose(lane, ship);
       expect(Math.hypot(pose.x - previous[index]!.x, pose.z - previous[index]!.z)).toBeLessThan(0.4);
     });
+  });
+
+  it("spawns the same ships for the same seed", () => {
+    const snapshot = city();
+    const harbor = snapshot.landmarks.find((item) => item.kind === "merge-harbor")!.position;
+    const navy = snapshot.landmarks.find((item) => item.kind === "review-center")!.position;
+    const lane = createShippingLane(snapshot.worldSize.width, snapshot.worldSize.depth, { harbor, navy }, 3.4, 1.5);
+    const specs = [
+      { asset: "cargo-ship" as const, speed: 1.2 },
+      { asset: "speedboat" as const, speed: 2.5 },
+    ];
+    expect(spawnShips(lane, specs, seededRandom(2))).toEqual(spawnShips(lane, specs, seededRandom(2)));
+    expect(spawnShips(lane, specs, seededRandom(2))).not.toEqual(spawnShips(lane, specs, seededRandom(3)));
   });
 
   it("pulls a cargo ship into a harbor berth and holds it there", () => {

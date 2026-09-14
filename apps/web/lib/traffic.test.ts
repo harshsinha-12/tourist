@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createCityMap } from "./city-map";
 import { generateCitySnapshot } from "@tourist/world-generator";
-import { advanceCars, carPose, carSpriteSrc, carTransform, createTrafficGraph, spawnCars, spriteFacing } from "./traffic";
+import { advanceCars, carPose, carSpriteSrc, carTransform, createTrafficGraph, seededRandom, spawnCars, spriteFacing } from "./traffic";
 
 function city() {
   return generateCitySnapshot({
@@ -19,8 +19,7 @@ describe("street traffic", () => {
     const graph = createTrafficGraph(map.streets, map.junctions);
     expect(graph.nodes.size).toBeGreaterThan(4);
     expect([...graph.nodes.values()].every((node) => node.neighbors.length > 0)).toBe(true);
-    let random = 0;
-    const next = () => (random = (random * 9301 + 49297) % 233280) / 233280;
+    const next = seededRandom(0);
     let cars = spawnCars(graph, 6, next);
     expect(cars).toHaveLength(6);
     const edges = new Set<string>();
@@ -43,6 +42,13 @@ describe("street traffic", () => {
       const pose = carPose(graph, car);
       expect(Math.hypot(pose.x - previous[index]!.x, pose.z - previous[index]!.z)).toBeLessThan(0.55);
     });
+  });
+
+  it("spawns the same cars for the same seed", () => {
+    const map = createCityMap(city());
+    const graph = createTrafficGraph(map.streets, map.junctions);
+    expect(spawnCars(graph, 6, seededRandom(1))).toEqual(spawnCars(graph, 6, seededRandom(1)));
+    expect(spawnCars(graph, 6, seededRandom(1))).not.toEqual(spawnCars(graph, 6, seededRandom(2)));
   });
 
   it("faces cars along their travel direction without rotating the sprite", () => {

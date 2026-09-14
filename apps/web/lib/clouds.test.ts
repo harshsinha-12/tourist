@@ -17,9 +17,10 @@ describe("sky clouds", () => {
     const points = wanderLoop(scene.maxX, scene.maxZ, 4, 0.4);
     expect(points.length).toBeGreaterThan(8);
     const path = projectedLoopPath(points, scene.project);
-    expect(path.startsWith("M")).toBe(true);
-    expect(path).toMatch(/C/);
+    expect(path.startsWith("M ")).toBe(true);
+    expect(path).toMatch(/C /);
     expect(path).not.toMatch(/ L/);
+    expect(path).not.toMatch(/\d\.\d{3}/);
     const other = projectedLoopPath(wanderLoop(scene.maxX, scene.maxZ, 4, 1.9), scene.project);
     expect(other).not.toBe(path);
   });
