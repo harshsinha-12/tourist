@@ -41,11 +41,29 @@ export async function scanLocalRepository(root: string): Promise<{
   const files = inventoryFromPaths(paths, locByPath);
   const { changedPaths, states } = await gitChanges(root);
   return {
-    name: root.split(/[\\/]/).at(-1) || "repository",
+    name: await repositoryDisplayName(root),
     revision: await gitRevision(root),
     files: files.map((file) => ({ ...file, state: states.get(file.path) ?? file.state })),
     changedPaths: changedPaths.filter((path) => files.some((file) => file.path === path)),
   };
+}
+
+export async function repositoryDisplayName(root: string): Promise<string> {
+  const owner = process.env.VERCEL_GIT_REPO_OWNER?.trim();
+  const slug = process.env.VERCEL_GIT_REPO_SLUG?.trim();
+  if (owner && slug) return `${owner}/${slug}`;
+  if (slug) return slug;
+  try {
+    const parsed = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as { name?: unknown };
+    if (typeof parsed.name === "string") {
+      const name = parsed.name.trim().replace(/^@[^/]+\//, "");
+      if (name) return name;
+    }
+  } catch {
+    // Fall through to the folder name when package.json is missing or invalid.
+  }
+  const folder = root.split(/[\\/]/).filter(Boolean).at(-1) || "repository";
+  return /^path\d+$/i.test(folder) ? "repository" : folder;
 }
 
 async function listPaths(root: string): Promise<string[]> {

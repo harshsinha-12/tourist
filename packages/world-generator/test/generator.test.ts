@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RepositoryFile } from "@tourist/protocol";
 import { generateCitySnapshot } from "../src/index";
+import { BLOCK_SIZE } from "../src/layout";
 
 const files: RepositoryFile[] = [
   { path: "apps/web/app/page.tsx", language: "TypeScript", kind: "source", linesOfCode: 120, changeFrequency: 4, state: "idle" },
@@ -82,8 +83,25 @@ describe("dense repository layouts", () => {
     }
     expect(new Set(city.buildings.map(({ position }) => `${position.x}:${position.z}`)).size).toBe(180);
     expect(city.landmarks.every(({ position }) => position.x >= 0 && position.x <= city.worldSize.width && position.z >= 0 && position.z <= city.worldSize.depth)).toBe(true);
-    expect(city.landmarks.find((landmark) => landmark.kind === "command-center")?.position).toMatchObject({ x: city.worldSize.width / 2, z: city.worldSize.depth / 2 });
     const hall = city.landmarks.find(l => l.kind === "command-center")!;
+    expect(Math.abs(hall.position.x - city.worldSize.width / 2)).toBeLessThan(BLOCK_SIZE);
+    expect(Math.abs(hall.position.z - city.worldSize.depth / 2)).toBeLessThan(BLOCK_SIZE);
     expect(city.buildings.every(b => Math.abs(b.position.x - hall.position.x) >= 3 || Math.abs(b.position.z - hall.position.z) >= 3)).toBe(true);
+  });
+
+  it("spreads leftover parks instead of leaving one empty wing", () => {
+    const city = generateCitySnapshot({
+      id: "spread", repository: { name: "spread", revision: "test" },
+      files: Array.from({ length: 84 }, (_, index) => ({
+        path: `src/file-${index}.ts`, language: "TypeScript", kind: "source" as const,
+        linesOfCode: 20, changeFrequency: 0, state: "idle" as const,
+      })),
+    });
+    const plots = city.layout!.blocks.filter((block) => block.use === "files");
+    const midX = city.worldSize.width / 2, midZ = city.worldSize.depth / 2;
+    expect(plots.some((block) => block.bounds.x + block.bounds.width / 2 < midX)).toBe(true);
+    expect(plots.some((block) => block.bounds.x + block.bounds.width / 2 > midX)).toBe(true);
+    expect(plots.some((block) => block.bounds.z + block.bounds.depth / 2 < midZ)).toBe(true);
+    expect(plots.some((block) => block.bounds.z + block.bounds.depth / 2 > midZ)).toBe(true);
   });
 });

@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveRepositoryRoot, scanLocalRepository } from "./scan-local-repo";
+import { resolveRepositoryRoot, repositoryDisplayName, scanLocalRepository } from "./scan-local-repo";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url)).replace(/\/$/, "");
 const web = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
@@ -49,6 +49,32 @@ describe("local repository scan", () => {
       ]);
     } finally {
       await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("names the island from package.json instead of a Vercel path0 checkout", async () => {
+    expect(await repositoryDisplayName("/vercel/path0")).toBe("repository");
+    const dir = await mkdtemp(join(tmpdir(), "tourist-name-"));
+    try {
+      await writeFile(join(dir, "package.json"), JSON.stringify({ name: "tourist" }));
+      expect(await repositoryDisplayName(dir)).toBe("tourist");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("prefers the Vercel git slug when naming a path0 checkout", async () => {
+    const owner = process.env.VERCEL_GIT_REPO_OWNER;
+    const slug = process.env.VERCEL_GIT_REPO_SLUG;
+    process.env.VERCEL_GIT_REPO_OWNER = "harshsinha-12";
+    process.env.VERCEL_GIT_REPO_SLUG = "tourist";
+    try {
+      expect(await repositoryDisplayName("/vercel/path0")).toBe("harshsinha-12/tourist");
+    } finally {
+      if (owner === undefined) delete process.env.VERCEL_GIT_REPO_OWNER;
+      else process.env.VERCEL_GIT_REPO_OWNER = owner;
+      if (slug === undefined) delete process.env.VERCEL_GIT_REPO_SLUG;
+      else process.env.VERCEL_GIT_REPO_SLUG = slug;
     }
   });
 });

@@ -5,20 +5,30 @@ export const FILES_PER_BLOCK = 4;
 const COAST_MARGIN = 5;
 
 export function planCity(fileCount: number) {
-  const required = Math.ceil(fileCount / FILES_PER_BLOCK) + 5;
-  // Odd dimensions put the town hall in the exact center, with no empty half-island.
-  let side = Math.max(3, Math.ceil(Math.sqrt(required)));
-  if (side % 2 === 0) side++;
+  const fileBlocksNeeded = Math.ceil(fileCount / FILES_PER_BLOCK);
+  const required = fileBlocksNeeded + 5;
+  const side = Math.max(3, Math.ceil(Math.sqrt(required)));
   const center = Math.floor(side / 2);
   const reserved = new Map<string, CityLayout["blocks"][number]["use"]>([
     [`${center},${center}`, "command-center"],
     ["0,0", "research-lab"], [`${side - 1},0`, "testing-facility"],
     [`0,${side - 1}`, "tool-workshop"], [`${side - 1},${side - 1}`, "data-archive"],
   ]);
-  let remaining = Math.ceil(fileCount / FILES_PER_BLOCK);
+  const open: Array<{ col: number; row: number }> = [];
+  for (let row = 0; row < side; row++) for (let col = 0; col < side; col++) {
+    if (!reserved.has(`${col},${row}`)) open.push({ col, row });
+  }
+  const parkCount = Math.max(0, open.length - fileBlocksNeeded);
+  const parks = new Set<string>();
+  for (let index = 0; index < open.length; index++) {
+    if (Math.floor((index + 1) * parkCount / open.length) > Math.floor(index * parkCount / open.length)) {
+      const cell = open[index]!;
+      parks.add(`${cell.col},${cell.row}`);
+    }
+  }
   const blocks: CityLayout["blocks"] = [];
   for (let row = 0; row < side; row++) for (let col = 0; col < side; col++) {
-    const use = reserved.get(`${col},${row}`) ?? (remaining-- > 0 ? "files" : "park");
+    const use = reserved.get(`${col},${row}`) ?? (parks.has(`${col},${row}`) ? "park" : "files");
     blocks.push({ id: `block-${col}-${row}`, use,
       bounds: { x: COAST_MARGIN + col * BLOCK_SIZE, z: COAST_MARGIN + row * BLOCK_SIZE, width: BLOCK_SIZE, depth: BLOCK_SIZE } });
   }
