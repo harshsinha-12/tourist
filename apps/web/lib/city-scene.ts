@@ -2,7 +2,7 @@ import type { Bounds, CitySnapshot } from "@tourist/protocol";
 
 export interface MapPoint { x: number; y: number; }
 export interface Camera { x: number; y: number; scale: number; }
-export const MIN_ZOOM = 0.15;
+export const MIN_ZOOM = 0.025;
 export const MAX_ZOOM = 2;
 
 export function zoomAt(camera: Camera, point: MapPoint, requestedScale: number): Camera {
@@ -14,9 +14,9 @@ export function zoomAt(camera: Camera, point: MapPoint, requestedScale: number):
 export function createCityScene(snapshot: CitySnapshot) {
   const maxZ = Math.max(snapshot.worldSize.depth, ...snapshot.landmarks.map((item) => item.position.z));
   const maxX = Math.max(snapshot.worldSize.width, ...snapshot.landmarks.map((item) => item.position.x));
-  const project = (x: number, z: number): MapPoint => ({ x: (x-z+maxZ)*48+180, y: (x+z)*24+210 });
-  const width = (maxX+maxZ)*48+360;
-  const height = (maxX+maxZ)*24+430;
+  const project = (x: number, z: number): MapPoint => ({ x: (x-z+maxZ)*48+360, y: (x+z)*24+260 });
+  const width = (maxX+maxZ)*48+720;
+  const height = (maxX+maxZ)*24+500;
   const polygon = (bounds: Bounds, offsetY = 0) => [
     [bounds.x, bounds.z], [bounds.x+bounds.width, bounds.z],
     [bounds.x+bounds.width, bounds.z+bounds.depth], [bounds.x, bounds.z+bounds.depth],

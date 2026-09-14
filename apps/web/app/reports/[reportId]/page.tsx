@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { TouristShell } from "../../../components/TouristShell";
-import { fixtureReport } from "../../../lib/fixture-report";
+import { loadLocalRepositoryReport } from "../../../lib/fixture-report";
 
 export default async function ReportPage({ params }: { params: Promise<{ reportId: string }> }) {
+  const report = await loadLocalRepositoryReport();
   const { reportId } = await params;
-  if (reportId !== fixtureReport.id) notFound();
-  return <TouristShell report={fixtureReport} />;
+  if (reportId !== report.id) notFound();
+  return <TouristShell report={report} />;
 }

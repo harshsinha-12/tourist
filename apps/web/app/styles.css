@@ -27,9 +27,9 @@ button, input { font: inherit; }
 .share-button { justify-self: end; color: #092135; background: var(--amber); border: 2px solid #fff1b5; border-radius: 3px; padding: 8px 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; box-shadow: 3px 3px 0 #9b671b; }
 .share-button:hover { translate: 1px 1px; box-shadow: 2px 2px 0 #9b671b; }
 
-.world-stage { position: fixed; inset: 60px 0 0; overflow: hidden; background: #168ad1; }
+.world-stage { position: fixed; inset: 60px 0 0; overflow: hidden; background: #268fb8 url("/assets/environment/ocean-tiles.svg") / 96px 48px; }
 .glass-panel { border: 2px solid var(--panel-border); border-radius: 4px; background: var(--panel); box-shadow: 5px 5px 0 rgba(2, 20, 34, 0.42); }
-.pixel-city { position: absolute; inset: 0 0 0 370px; background: #237d9a; }
+.pixel-city { position: absolute; inset: 0; background: #237d9a; }
 .city-scroll { position: absolute; inset: 0; overflow: auto; scrollbar-color: #71bca5 #194e60; }
 .city-artboard { position: relative; transform-origin: top left; }
 .city-ground { position: absolute; inset: 0; pointer-events: none; }
@@ -96,7 +96,7 @@ button, input { font: inherit; }
   .topbar { grid-template-columns: 1fr auto; padding: 0 11px; }
   .repo-chip { display: none; }
   .share-button { padding: 7px 9px; }
-  .pixel-city { inset: 29vh 0 24vh; }
+  .pixel-city { inset: 0; }
   .report-card { top: 10px; left: 10px; width: min(320px, calc(100vw - 20px)); max-height: 27vh; padding: 13px; }
   .report-card h1 { font-size: 25px; }
   .report-card > p { display: none; }
@@ -191,8 +191,8 @@ button, input { font: inherit; }
 .map-zoom { align-self: center; font-size: 9px; color: #c9dcdb; padding: 0 4px; }
 .map-controls button { min-height: 36px; min-width: 36px; font-size: 10px; }
 .city-empty { position: absolute; translate: -50% -50%; color: #e4edd7; background: #173d42; padding: 20px; font-size: 20px; }
-.environment-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.city-viewport { background-color: #1f7897; background-image: radial-gradient(circle at 20% 25%, #5cb8c322 0 2px, transparent 3px), repeating-linear-gradient(135deg, #ffffff08 0 2px, transparent 2px 22px); background-size: 240px 180px, 46px 46px; }
+.environment-layer { position: absolute; inset: 0; pointer-events: none; }
+.city-viewport { background-color: #268fb8; background-image: url("/assets/environment/ocean-tiles.svg"); background-size: 96px 48px; }
 .city-ground > rect { display: none; }
 .environment-sprite { position: absolute; display: block; height: auto; translate: -50% -100%; image-rendering: auto; user-select: none; }
 .environment-tree { z-index: 2; filter: drop-shadow(2px 4px 0 #214b3c55); }
@@ -278,3 +278,62 @@ button, input { font: inherit; }
 @keyframes worker-idle { 50% { translate: -50% calc(-100% - 3px); } }
 @media (max-width: 700px) { .operation-backdrop { padding: 10px; }.operation-modal { max-height: 95vh; }.operation-header { padding: 18px 18px 14px; }.operation-title-row h2 { font-size: 19px; }.operation-search, .operation-list { margin-left: 14px; margin-right: 14px; padding-left: 0; padding-right: 0; }.operation-footer { padding-left: 14px; padding-right: 14px; }.operation-card { grid-template-columns: 40px 1fr; }.operation-card b { grid-column: 2; }.operation-command { padding-left: 14px; padding-right: 14px; }.operation-command .operation-footer { margin-left: -14px; margin-right: -14px; } }
 @media (prefers-reduced-motion: reduce) { .builder-pawn, .builder-sprite { animation: none; } }
+
+/* Plot baselines and street furniture share the map's depth order. */
+.city-landmark { width: 235px; height: 235px; translate: -50% -96%; }
+.city-landmark .landmark-sprite { width: 235px; margin: 0; translate: 0; }
+.city-landmark.landmark-command-center { width: 320px; height: 320px; }
+.city-landmark.landmark-command-center .landmark-sprite { width: 320px; margin: 0; translate: 0; }
+.landmark-action:hover .landmark-sprite, .landmark-action:focus-visible .landmark-sprite { translate: 0 -5px; }
+.city-landmark .building-name { top: 225px; }
+.city-landmark.landmark-command-center .building-name { top: 307px; }
+.operation-marker { translate: -50% -96%; }
+.operation-marker button { width: 240px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.operation-marker button:hover, .operation-marker button:focus-visible { background: transparent; translate: 0; }
+.airbase-art { width: 240px; margin: 0; }
+.operation-marker-label { position: absolute; bottom: 0; padding: 4px 6px; color: #fff1bd; background: #123e47e8; font-size: 9px; }
+.city-roads .city-street path { stroke-linecap: round; stroke-linejoin: round; }
+.city-roads .city-street path:first-child { stroke: #d9d0a7; stroke-width: 30; }
+.city-roads .city-street .road-surface { stroke: #627978; stroke-width: 22; stroke-dasharray: none; opacity: 1; }
+.city-roads .city-street .road-markings { stroke: #ede4be; stroke-width: 2; stroke-dasharray: 9 12; opacity: .85; }
+.city-traffic { pointer-events: none; }
+.builder-pawn { z-index: 10000; }
+.builder-pawn-idle { animation: none; }
+
+/* One city plan: continuous ocean, shaded lawns and small planted verges. */
+.city-viewport { background-color: #238cbb; background-image: url("/assets/environment/ocean-tiles.svg"), radial-gradient(ellipse at 45% 25%, #35a8d5, #135172); }
+.city-plot:not(.city-landmark) { width: 144px; height: 144px; translate: -50% -96%; }
+.city-plot .file-building { height: 144px; }
+.city-plot .building-name { top: 140px; }
+.city-plot .building-state { top: 163px; }
+.city-landmark { width: 220px; height: 220px; }
+.city-landmark .landmark-sprite { width: 220px; }
+.city-landmark .building-name { top: 210px; font-size: 12px; }
+.city-landmark.landmark-command-center { width: 290px; height: 290px; }
+.city-landmark.landmark-command-center .landmark-sprite { width: 290px; }
+.city-landmark.landmark-command-center .building-name { top: 281px; }
+.district-block:hover, .district-block.is-hovered { fill: #e5f4a624; stroke: #e4efb8; stroke-width: 2; opacity: 1; }
+.environment-tree { filter: drop-shadow(3px 4px 0 #31583530); }
+.city-viewport { background-repeat: repeat, no-repeat; }
+.report-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; margin: -3px 0 10px; padding: 0 0 9px; color: #ffe296; border: 0; border-bottom: 1px solid #31556a; background: transparent; cursor: pointer; }
+.report-toggle .panel-kicker { margin: 0; font-size: 8px; }
+.report-toggle:focus-visible { outline: 2px solid #ffe296; outline-offset: 4px; }
+.report-collapsed { width: 275px; }
+.report-collapsed h1 { font-size: 22px; }
+.city-census { display: flex; gap: 8px; align-items: baseline; margin-top: 10px; }
+.city-census strong { font: 30px/1 ui-monospace, monospace; color: #e8eedb; }
+.city-census span { font-size: 7px; letter-spacing: .1em; color: #acc9cf; }
+.city-census span:last-child { margin-left: auto; }
+#report-evidence > p { color: var(--muted); font: 12px/1.5 ui-sans-serif, system-ui, sans-serif; }
+.world-controls { display: none; }
+@media (max-width: 820px) {
+  .report-collapsed { width: 190px; max-height: none; padding: 10px; }
+  .report-collapsed h1 { font-size: 17px; }
+  .city-census { gap: 5px; }.city-census strong { font-size: 23px; }.city-census span { font-size: 6px; }
+  .report-toggle .panel-kicker { font-size: 6px; }
+  .map-controls { top: auto; right: 10px; bottom: 25vh; }
+}
+.city-landmark .landmark-sprite { position: absolute; left: 0; top: auto; bottom: 0; }
+.city-landmark.landmark-command-center { width: 256px; height: 256px; }
+.city-landmark.landmark-command-center .landmark-sprite { width: 256px; }
+.city-landmark.landmark-command-center .building-name { top: 246px; }

@@ -12,6 +12,7 @@ export function TouristShell({ report }: { report: PublicReport }) {
   const [focusedAnchorId, setFocusedAnchorId] = useState<string>();
   const [operation, setOperation] = useState<CityOperation>();
   const [operationNotice, setOperationNotice] = useState<string>();
+  const [reportExpanded, setReportExpanded] = useState(false);
   const snapshot = report.snapshot;
   const selectedBuilding = useMemo(
     () => snapshot.buildings.find((building) => building.id === selectedBuildingId),
@@ -52,9 +53,13 @@ export function TouristShell({ report }: { report: PublicReport }) {
           onOpenOperation={setOperation}
         />
 
-        <aside className="report-card glass-panel">
-          <div className="panel-kicker">PUBLIC BUILD REPORT</div>
-          <h1>{report.title}</h1>
+        <aside className={`report-card glass-panel ${reportExpanded ? "report-expanded" : "report-collapsed"}`}>
+          <button className="report-toggle" type="button" onClick={() => setReportExpanded(value => !value)} aria-expanded={reportExpanded} aria-controls="report-evidence">
+            <span className="panel-kicker">CITY SCAN · BUILD REPORT</span><span>{reportExpanded ? "−" : "+"}</span>
+          </button>
+          <h1>{reportExpanded ? report.title : snapshot.repository.name}</h1>
+          <div className="city-census"><strong>{snapshot.buildings.length}</strong><span>FILE BUILDINGS</span><span>{snapshot.layout?.blocks.length ?? snapshot.districts.length} BLOCKS</span></div>
+          <div id="report-evidence" hidden={!reportExpanded}>
           <p>{report.summary}</p>
           <div className="report-meta">
             <span>{snapshot.buildings.length} buildings</span>
@@ -84,6 +89,7 @@ export function TouristShell({ report }: { report: PublicReport }) {
             </div>
           )}
           <Link className="gallery-link" href="/buildings">Explore the building collection ↗</Link>
+          </div>
         </aside>
 
         <aside className="inspector glass-panel" aria-live="polite">

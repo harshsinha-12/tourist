@@ -5,7 +5,8 @@ import type { CitySnapshot, Building, Landmark, LandmarkKind } from "@tourist/pr
 import { FileBuilding } from "./buildings/FileBuilding";
 import { EnvironmentSprite, type EnvironmentAsset } from "./EnvironmentSprite";
 import { LandmarkSprite, type CustomLandmarkAsset } from "./LandmarkSprite";
-import { createCityScene, zoomAt, type Camera } from "../lib/city-scene";
+import { createCityScene, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib/city-scene";
+import { createCityMap } from "../lib/city-map";
 
 interface CityCanvasProps {
   snapshot: CitySnapshot;
@@ -41,39 +42,25 @@ function SceneSprite({ asset, scene, x, z, width, className = "", style }: {
   return <EnvironmentSprite asset={asset} className={className} style={{ left: point.x, top: point.y, width, ...style }} />;
 }
 
-function nearBuilding(x: number, z: number, buildings: readonly Building[]): boolean {
-  return buildings.some((building) => Math.abs(building.position.x - x) < 1.8 && Math.abs(building.position.z - z) < 1.8);
-}
-
-function treePoints(snapshot: CitySnapshot) {
-  const points: Array<{ x: number; z: number; size: number }> = [];
-  for (const sector of snapshot.sectors) {
-    for (let x = sector.bounds.x + 1.8; x < sector.bounds.x + sector.bounds.width - 1; x += 3.4) {
-      for (let z = sector.bounds.z + 1.8; z < sector.bounds.z + sector.bounds.depth - 1; z += 3.4) {
-        const seed = Math.round(x * 13 + z * 17 + sector.bounds.x * 7 + sector.bounds.z * 11);
-        if (seed % 5 > 1 || nearBuilding(x, z, snapshot.buildings)) continue;
-        points.push({ x, z, size: seed % 3 === 0 ? 1.2 : .9 });
-      }
-    }
-  }
-  return points;
-}
-
 export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSelectBuilding, editingBuildingIds = [], onSelectLandmark, onOpenOperation }: CityCanvasProps) {
   const scene = useMemo(() => createCityScene(snapshot), [snapshot]);
-  const trees = useMemo(() => treePoints(snapshot), [snapshot]);
+  const map = useMemo(() => createCityMap(snapshot), [snapshot]);
+  const trees = map.trees;
   const viewport = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 1000, height: 700 });
-  const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, scale: .4 });
+  const [camera, setCamera] = useState<Camera>(() => {
+    const scale = Math.max(MIN_ZOOM, Math.min(1, 960 / scene.width, 630 / scene.height));
+    return { x: (1000 - scene.width * scale) / 2, y: (700 - scene.height * scale) / 2, scale };
+  });
   const [showLabels, setShowLabels] = useState(false);
-  const [hoveredDistrictId, setHoveredDistrictId] = useState<string>();
+  const [hoveredBlockId, setHoveredBlockId] = useState<string>();
   const drag = useRef<{ x: number; y: number; origin: Camera; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
   const anchor = snapshot.anchors.find((item) => item.id === focusedAnchorId);
   const target = anchor?.target;
   const focusId = target?.type === "building" ? target.buildingId : target?.type === "landmark" ? target.landmarkId : target?.type === "district" ? target.districtId : undefined;
   const fit = useCallback(() => {
-    const scale = Math.max(.15, Math.min(.75, (size.width-60)/scene.width, (size.height-90)/scene.height));
+    const scale = Math.max(MIN_ZOOM, Math.min(1, (size.width-40)/scene.width, (size.height-70)/scene.height));
     setCamera({ x: (size.width-scene.width*scale)/2, y: (size.height-scene.height*scale)/2, scale });
   }, [scene, size]);
 
@@ -104,23 +91,18 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     return () => node.removeEventListener("wheel", wheel);
   }, [size.height]);
 
-  const island = { x: -1, z: -1, width: scene.maxX+3, depth: scene.maxZ+3 };
-  const roadRoutes = snapshot.sectors.flatMap((sector) => {
-    const horizontal = [0.25, 0.5, 0.75].map((ratio) => [
-      scene.project(sector.bounds.x + 1, sector.bounds.z + sector.bounds.depth * ratio),
-      scene.project(sector.bounds.x + sector.bounds.width - 1, sector.bounds.z + sector.bounds.depth * ratio),
-    ] as const);
-    const vertical = [0.25, 0.5, 0.75].map((ratio) => [
-      scene.project(sector.bounds.x + sector.bounds.width * ratio, sector.bounds.z + 1),
-      scene.project(sector.bounds.x + sector.bounds.width * ratio, sector.bounds.z + sector.bounds.depth - 1),
-    ] as const);
-    return [...horizontal, ...vertical];
-  });
-  const arterialRoutes = [
-    [scene.project(0, scene.maxZ / 2), scene.project(scene.maxX, scene.maxZ / 2)],
-    [scene.project(scene.maxX / 2, 0), scene.project(scene.maxX / 2, scene.maxZ)],
-  ] as const;
-  const allRoadRoutes = [...roadRoutes, ...arterialRoutes];
+  const island = { x: 0, z: 0, width: scene.maxX, depth: scene.maxZ };
+  const coastTiles = [
+    ...Array.from({ length: Math.ceil(scene.maxX) }, (_, x) => [
+      { x, z: -1, width: 1, depth: 1 }, { x, z: scene.maxZ, width: 1, depth: 1 },
+      ...(x % 4 === 0 ? [{ x, z: -2, width: 1, depth: 1 }, { x, z: scene.maxZ + 1, width: 1, depth: 1 }] : []),
+    ]).flat(),
+    ...Array.from({ length: Math.ceil(scene.maxZ) }, (_, z) => [
+      { x: -1, z, width: 1, depth: 1 }, { x: scene.maxX, z, width: 1, depth: 1 },
+      ...(z % 5 < 2 ? [{ x: -2, z, width: 1, depth: 1 }, { x: scene.maxX + 1, z, width: 1, depth: 1 }] : []),
+    ]).flat(),
+  ];
+  const allRoadRoutes = map.streets.map(([a, b]) => [scene.project(a.x, a.z), scene.project(b.x, b.z)] as const);
   const drawables = [
     ...snapshot.buildings.map((building) => ({ id: building.id, position: building.position, building })),
     ...snapshot.landmarks.map((landmark) => ({ id: landmark.id, position: landmark.position, landmark })),
@@ -131,7 +113,7 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
   const builderOrigin = scene.targets.get("landmark-command-center") ?? scene.project(scene.maxX / 2, scene.maxZ / 2);
 
   return <div className="pixel-city" aria-label={`Interactive city of ${snapshot.repository.name}`}>
-    <div className="city-viewport" ref={viewport} tabIndex={0} aria-label="City map. Drag to pan, scroll to zoom. Arrow keys pan; plus and minus zoom."
+    <div className="city-viewport" ref={viewport} data-viewport-width={size.width} style={{ backgroundSize: `${96 * camera.scale}px ${48 * camera.scale}px, 100% 100%`, backgroundPosition: `${camera.x}px ${camera.y}px, center` }} tabIndex={0} aria-label="City map. Drag to pan, scroll to zoom. Arrow keys pan; plus and minus zoom."
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         suppressClick.current = false;
@@ -159,10 +141,20 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
       <div className={`city-artboard ${showLabels ? "show-labels" : ""}`} style={{ width: scene.width, height: scene.height, transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})` }}>
         <svg className="city-ground" width={scene.width} height={scene.height} aria-hidden="true">
           <defs>
-            <pattern id="city-grass-pixels" width="32" height="32" patternUnits="userSpaceOnUse">
-              <rect width="32" height="32" fill="#729750" />
-              <path d="M0 16h12M22 7h7M15 28h10" stroke="#87aa5c" strokeWidth="2" opacity=".38" />
-              <path d="M4 5h5M27 25h3" stroke="#5e874b" strokeWidth="2" opacity=".28" />
+            <mask id="street-junction-mask">
+              <rect width={scene.width} height={scene.height} fill="white" />
+              {map.junctions.map((point, i) => <polygon key={i} points={scene.polygon({ x: point.x - .8, z: point.z - .8, width: 1.6, depth: 1.6 })} fill="black" />)}
+            </mask>
+            <pattern id="city-grass-pixels" width="96" height="48" patternUnits="userSpaceOnUse">
+              <rect width="96" height="48" fill="#7cb454" />
+              <path d="M48 0L96 24 48 48 0 24Z" fill="#86bc5b" stroke="#74ab50" strokeWidth=".5" />
+              <path d="M22 22h3M62 33h3M48 9h2" stroke="#a1ca71" strokeWidth="2" opacity=".55" />
+            </pattern>
+            <pattern id="city-plaza-pavers" width="48" height="24" patternUnits="userSpaceOnUse">
+              <rect width="48" height="24" fill="#c7be99" /><path d="M24 0L48 12 24 24 0 12Z" fill="none" stroke="#ddd2af" strokeWidth="1" />
+            </pattern>
+            <pattern id="city-lawn-tiles" width="192" height="96" patternUnits="userSpaceOnUse">
+              <rect width="192" height="96" fill="#85af60" /><path d="M96 0L192 48 96 96 0 48Z" fill="#8cb665" stroke="#78a659" strokeWidth="1" />
             </pattern>
             <clipPath id="city-island-clip"><polygon points={scene.polygon(island)} /></clipPath>
           </defs>
@@ -174,108 +166,74 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
               return <path key={index} d={`M${x} ${y}h${10 + (index % 4) * 5}`} />;
             })}
           </g>
-          <polygon points={scene.polygon(island, 30)} fill="#766646" stroke="#345949" strokeWidth="10" />
+          <polygon points={scene.polygon(island, 30)} fill="#817351" stroke="#345949" strokeWidth="10" />
           <polygon points={scene.polygon(island, 10)} fill="#d5be84" stroke="#ecdba9" strokeWidth="14" />
+          {coastTiles.map((tile, index) => <polygon key={`beach-${index}`} points={scene.polygon(tile)}
+            fill={index % 3 === 0 ? "#e8d59e" : "#dbc78e"} stroke="#f0dfae" strokeWidth="1" />)}
           <polygon points={scene.polygon(island)} fill="url(#city-grass-pixels)" />
-          {snapshot.sectors.map((sector) => <g key={sector.id}>
-            <polygon points={scene.polygon(sector.bounds)} fill="#83a35b" stroke="#d4c796" strokeWidth="28" />
-            <polygon points={scene.polygon(sector.bounds)} fill="none" stroke="#65736e" strokeWidth="18" />
-            <polygon points={scene.polygon(sector.bounds)} fill="none" stroke="#dbd8b0" strokeWidth="1.5" strokeDasharray="10 10" />
-            <text x={scene.project(sector.bounds.x,sector.bounds.z).x} y={scene.project(sector.bounds.x,sector.bounds.z).y-30} textAnchor="middle" className="sector-label">{sector.name}</text>
-          </g>)}
-          {snapshot.districts.map((district) => <polygon
-            key={district.id}
-            className={`district-block ${hoveredDistrictId === district.id ? "is-hovered" : ""}`}
-            points={scene.polygon(district.bounds)}
-            fill="#91ab6b"
-            stroke="#bbc791"
-            strokeWidth={hoveredDistrictId === district.id ? 8 : 3}
-            onMouseEnter={() => setHoveredDistrictId(district.id)}
-            onMouseLeave={() => setHoveredDistrictId(undefined)}
-          />)}
-          <g className="city-roads" aria-hidden="true">
-            {allRoadRoutes.map(([from, to], index) => <g key={index} className={index >= roadRoutes.length ? "city-arterial" : undefined}>
-              <path d={`M${from.x} ${from.y}L${to.x} ${to.y}`} />
-              <path className="road-markings" d={`M${from.x} ${from.y}L${to.x} ${to.y}`} />
-            </g>)}
-          </g>
-          <g className="city-trees" aria-hidden="true">
-            {trees.map((tree, index) => {
-              const point = scene.project(tree.x, tree.z);
-              const s = tree.size;
-              return <g key={index} transform={`translate(${point.x} ${point.y}) scale(${s})`}>
-                <ellipse cx="0" cy="2" rx="11" ry="4" fill="#365c45" opacity=".28" />
-                <path d="M-2 1v-19h4V1Z" fill="#725037" />
-                <path d="M-14-16 0-39 14-16 8-18 0-28-8-18Z" fill="#2c6548" stroke="#214d40" strokeWidth="1.5" />
-                <path d="M-9-22 0-35 9-22 3-24 0-29-3-24Z" fill="#4d9251" />
-              </g>;
-            })}
-          </g>
-          <g className="city-lamps" aria-hidden="true">
-            {snapshot.sectors.flatMap((sector) => [0, 1, 2].map((index) => {
-              const point = scene.project(sector.bounds.x + 2 + index * 5, sector.bounds.z + 1.3);
-              return <g key={`${sector.id}-lamp-${index}`} transform={`translate(${point.x} ${point.y})`}><path d="M0 0v-12" stroke="#273f43" strokeWidth="2"/><circle cy="-14" r="3" fill="#ffe7a3" stroke="#815f2c" strokeWidth="1"/></g>;
-            }))}
-          </g>
-          <g className="city-fountain" transform={`translate(${scene.project(scene.maxX / 2, scene.maxZ / 2).x} ${scene.project(scene.maxX / 2, scene.maxZ / 2).y})`} aria-hidden="true">
-            <ellipse cx="0" cy="2" rx="26" ry="9" fill="#315f66" opacity=".28" />
-            <path d="M-22 0 0-10 22 0 0 10Z" fill="#d4c383" stroke="#6d765e" strokeWidth="2" />
-            <path d="M0 0v-18" stroke="#9ee7e3" strokeWidth="3" strokeDasharray="3 3" />
-            <path d="M-10-8Q-5-16 0-18Q5-16 10-8" fill="none" stroke="#8ddbd8" strokeWidth="2" />
-          </g>
-          <g className="city-clouds" aria-hidden="true">
-            <g className="city-cloud cloud-one"><path d="M120 180q10-17 27 0 18-25 37 1h28v9h-92Z" fill="#dff5ee" opacity=".45" /></g>
-            <g className="city-cloud cloud-two"><path d="M1050 310q10-17 27 0 18-25 37 1h28v9h-92Z" fill="#dff5ee" opacity=".36" /></g>
-          </g>
-          <g className="city-birds" aria-hidden="true">
-            <path d="M170 270q7-8 14 0 7-8 14 0" />
-            <path d="M1180 170q6-7 12 0 6-7 12 0" />
-          </g>
-          <g className="city-piers" aria-hidden="true">
-            {[scene.project(1, scene.maxZ + 2), scene.project(scene.maxX + 2, 1)].map((point, index) => <g key={index} transform={`translate(${point.x} ${point.y}) rotate(${index ? 35 : -35})`}>
-              <path d="M0 0v-58M14 0v-58M28 0v-58" stroke="#6b4d34" strokeWidth="5" />
-              <path d="M-12-56h54v12h-54Z" fill="#9a6c43" stroke="#493c36" strokeWidth="2" />
-              <path d="M-5-52h40M-5-46h40" stroke="#d19a5b" strokeWidth="2" />
-              <circle cx="-12" cy="-61" r="4" fill="#ffe09b" />
-              <circle cx="42" cy="-61" r="4" fill="#ffe09b" />
-            </g>)}
+          <polygon className="civic-plaza" points={scene.polygon(map.plaza)} fill="url(#city-plaza-pavers)" stroke="#efdfa9" strokeWidth="8" />
+          {snapshot.layout && <g className="coastal-walkways">
+            <polygon points={scene.polygon({ x: map.airbase.x - .3, z: map.airbase.z - .35, width: snapshot.layout.origin.x - map.airbase.x + .3, depth: .7 })} fill="#d7ceb0" />
+            {snapshot.landmarks.filter(l => l.kind === "merge-harbor" || l.kind === "review-center").map(l => <polygon key={l.id}
+              points={scene.polygon(l.kind === "merge-harbor"
+                ? { x: l.position.x - .4, z: scene.maxZ - 5, width: .8, depth: 4.5 }
+                : { x: scene.maxX - 5, z: l.position.z - .4, width: 4.5, depth: .8 })} fill="#d7ceb0" />)}
+          </g>}
+          {map.blocks.map((block, index) => {
+            const b = block.bounds;
+            const garden = { x: b.x + .7, z: b.z + .7, width: b.width - 1.4, depth: b.depth - 1.4 };
+            return <g key={block.id}>
+              <polygon points={scene.polygon(garden)} fill={block.use === "command-center" ? "url(#city-plaza-pavers)" : index % 2 ? "#75b452" : "#7dbb55"} />
+              {[0, 1, 2, 3].map(slot => <polygon key={slot} points={scene.polygon({
+                x: garden.x + (slot % 2) * garden.width / 2, z: garden.z + Math.floor(slot / 2) * garden.depth / 2,
+                width: garden.width / 2, depth: garden.depth / 2,
+              })} fill={block.use === "command-center" ? "transparent" : slot % 3 === 0 ? "#91c565" : "#6dac4e"} opacity=".5" />)}
+              <polygon className={`district-block ${hoveredBlockId === block.id ? "is-hovered" : ""}`}
+                points={scene.polygon(garden)} fill="transparent" stroke="transparent"
+                onMouseEnter={() => setHoveredBlockId(block.id)} onMouseLeave={() => setHoveredBlockId(undefined)}>
+                <title>{block.use === "files" ? "File block" : block.use.replaceAll("-", " ")}</title>
+              </polygon>
+            </g>;
+          })}
+          <g className="planned-roads" aria-hidden="true">
+            {map.streets.map((street, index) => <polygon key={`pavement-${index}`} points={scene.polygon(map.roadBounds(street, 1.18))} fill="#cfceb7" />)}
+            {map.streets.map((street, index) => <polygon key={`road-${index}`} points={scene.polygon(map.roadBounds(street))} fill="#89999a" />)}
+            <g mask="url(#street-junction-mask)">
+              {allRoadRoutes.map(([a, b], index) => <path key={index} d={`M${a.x} ${a.y}L${b.x} ${b.y}`} fill="none" stroke="#e8ecda" strokeWidth="2.2" strokeDasharray="12 13" />)}
+            </g>
+            {map.junctions.filter(p => Math.abs(p.x - scene.maxX / 2) < 5 && Math.abs(p.z - scene.maxZ / 2) < 5).flatMap((p, i) =>
+              [-1, 1].flatMap(sign => Array.from({ length: 4 }, (_, n) => <g key={`${i}-${sign}-${n}`}>
+                <polygon points={scene.polygon({ x: p.x + sign * .95, z: p.z - .32 + n * .18, width: .4, depth: .08 })} fill="#f0eee0" />
+                <polygon points={scene.polygon({ z: p.z + sign * .95, x: p.x - .32 + n * .18, depth: .4, width: .08 })} fill="#f0eee0" />
+              </g>)))}
           </g>
           <g className="city-traffic" aria-hidden="true">
-            {allRoadRoutes.slice(0, 5).map(([from, to], index) => <image key={index} href={`/assets/environment/${index === 1 ? "delivery-van" : "compact-car"}.webp`} x={-34} y={-34} width="68" height="68" preserveAspectRatio="xMidYMid meet">
-              <animateMotion dur={`${13 + index * 4}s`} repeatCount="indefinite" rotate="auto" path={`M${from.x} ${from.y}L${to.x} ${to.y}`} />
+            {allRoadRoutes.filter(([a, b]) => Math.hypot(b.x - a.x, b.y - a.y) > 300).slice(0, 8).map(([from, to], index) => <image key={index} href={`/assets/environment/${index === 1 ? "delivery-van" : "compact-car"}.webp`} x={-34} y={-34} width="68" height="68" preserveAspectRatio="xMidYMid meet">
+              <animateMotion dur={`${13 + index * 4}s`} repeatCount="indefinite" rotate="0" path={`M${from.x} ${from.y}L${to.x} ${to.y}`} />
             </image>)}
           </g>
           <g className="city-ships" aria-hidden="true">
-            <image href="/assets/environment/cargo-ship.webp" x={-82} y={-48} width="164" height="96" preserveAspectRatio="xMidYMid meet"><animateMotion dur="30s" repeatCount="indefinite" path={`M${scene.project(-4, scene.maxZ + 5).x} ${scene.project(-4, scene.maxZ + 5).y}L${scene.project(scene.maxX + 5, scene.maxZ + 5).x} ${scene.project(scene.maxX + 5, scene.maxZ + 5).y}`} /></image>
-            <image href="/assets/environment/speedboat.webp" x={-70} y={-44} width="140" height="88" preserveAspectRatio="xMidYMid meet"><animateMotion dur="22s" repeatCount="indefinite" path={`M${scene.project(scene.maxX + 5, -3).x} ${scene.project(scene.maxX + 5, -3).y}L${scene.project(scene.maxX + 5, scene.maxZ + 5).x} ${scene.project(scene.maxX + 5, scene.maxZ + 5).y}`} /></image>
+            <image href="/assets/environment/cargo-ship.webp" x={-82} y={-48} width="164" height="96" preserveAspectRatio="xMidYMid meet"><animateMotion dur="30s" repeatCount="indefinite" path={`M${scene.project(0, scene.maxZ + 4).x} ${scene.project(0, scene.maxZ + 4).y}L${scene.project(scene.maxX + 4, scene.maxZ + 4).x} ${scene.project(scene.maxX + 4, scene.maxZ + 4).y}`} /></image>
+            <image href="/assets/environment/speedboat.webp" x={-70} y={-44} width="140" height="88" preserveAspectRatio="xMidYMid meet"><animateMotion dur="22s" repeatCount="indefinite" path={`M${scene.project(scene.maxX + 4, 0).x} ${scene.project(scene.maxX + 4, 0).y}L${scene.project(scene.maxX + 4, scene.maxZ + 4).x} ${scene.project(scene.maxX + 4, scene.maxZ + 4).y}`} /></image>
           </g>
         </svg>
-        <div className="operation-marker airbase-marker" style={{ left: scene.project(scene.maxX * .1, scene.maxZ * .78).x, top: scene.project(scene.maxX * .1, scene.maxZ * .78).y }}>
+        <div className="operation-marker airbase-marker" style={{ left: scene.project(map.airbase.x, map.airbase.z).x, top: scene.project(map.airbase.x, map.airbase.z).y, zIndex: Math.round((map.airbase.x + map.airbase.z) * 10) + 100 }}>
           <button type="button" onClick={() => onOpenOperation?.("airbase")} aria-label="Open the repository airbase and import a repository">
             <LandmarkSprite asset="airbase" className="airbase-art" />
             <span className="operation-marker-label">AIRBASE</span>
           </button>
         </div>
         <div className="environment-layer" aria-hidden="true">
-          {trees.map((tree, index) => <SceneSprite key={`tree-${index}`} asset={index % 4 === 0 ? "conifer" : "broadleaf-tree"} scene={scene} x={tree.x} z={tree.z} width={tree.size > 1 ? 120 : 94} className="environment-tree" />)}
-          {snapshot.sectors.map((sector, index) => {
-            const centerX = sector.bounds.x + sector.bounds.width / 2;
-            const centerZ = sector.bounds.z + sector.bounds.depth / 2;
-            return <span key={sector.id}>
-              <SceneSprite asset="road-intersection" scene={scene} x={centerX} z={centerZ} width={180} className="environment-road" />
-              <SceneSprite asset="fountain" scene={scene} x={centerX + (index % 2 ? 2 : -2)} z={centerZ + (index % 2 ? -2 : 2)} width={105} className="environment-fountain" />
-              <SceneSprite asset="street-lamp" scene={scene} x={sector.bounds.x + 2} z={sector.bounds.z + 1.3} width={48} className="environment-lamp" />
-              <SceneSprite asset="street-lamp" scene={scene} x={sector.bounds.x + sector.bounds.width - 2} z={sector.bounds.z + sector.bounds.depth - 1.3} width={48} className="environment-lamp" />
-            </span>;
-          })}
-          <SceneSprite asset="cloud" scene={scene} x={scene.maxX * .14} z={scene.maxZ * .2} width={150} className="environment-cloud cloud-drift-one" />
-          <SceneSprite asset="cloud" scene={scene} x={scene.maxX * .78} z={scene.maxZ * .12} width={120} className="environment-cloud cloud-drift-two" />
-          <SceneSprite asset="pier" scene={scene} x={1} z={scene.maxZ + 2} width={190} className="environment-pier" />
-          <SceneSprite asset="pier" scene={scene} x={scene.maxX + 2} z={2} width={190} className="environment-pier pier-two" />
+          {map.decorations.map((decoration, index) => <SceneSprite key={`decoration-${index}`} asset={decoration.asset} scene={scene}
+            x={decoration.x} z={decoration.z} width={decoration.width}
+            style={{ zIndex: Math.round((decoration.x + decoration.z) * 10) + 100 }} />)}
+          {trees.map((tree, index) => <SceneSprite key={`tree-${index}`} asset={tree.asset} scene={scene} x={tree.x} z={tree.z} width={Math.round(tree.size * 90)} className="environment-tree" style={{ zIndex: Math.round((tree.x + tree.z) * 10) + 100 }} />)}
+          <SceneSprite asset="cloud" scene={scene} x={-3} z={scene.maxZ * .4} width={150} className="environment-cloud cloud-drift-one" />
+          <SceneSprite asset="cloud" scene={scene} x={scene.maxX + 4} z={scene.maxZ * .3} width={120} className="environment-cloud cloud-drift-two" />
         </div>
         {drawables.map((item) => {
           const point = scene.targets.get(item.id)!;
-          return <div className={`city-plot ${"landmark" in item ? `city-landmark landmark-${item.landmark.kind}` : ""} ${focusId===item.id ? "is-active" : ""}`} key={item.id} style={{ left: point.x, top: point.y }}>
+          return <div className={`city-plot ${"landmark" in item ? `city-landmark landmark-${item.landmark.kind}` : ""} ${focusId===item.id ? "is-active" : ""}`} key={item.id} style={{ left: point.x, top: point.y, zIndex: Math.round((item.position.x + item.position.z) * 10) + 100 }}>
             {"building" in item ? <FileBuilding building={item.building} active={item.id===selectedBuildingId || item.id===focusId} onSelect={onSelectBuilding} /> : <button
               type="button"
               className="landmark-action"
@@ -311,9 +269,9 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
       </div>
     </div>
     <div className="map-controls glass-panel" aria-label="Map controls">
-      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*1.25))} disabled={camera.scale>=2} type="button">+</button>
+      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*1.25))} disabled={camera.scale>=MAX_ZOOM} type="button">+</button>
       <span className="map-zoom">{Math.round(camera.scale*100)}%</span>
-      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*.8))} disabled={camera.scale<=.15} type="button">−</button>
+      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*.8))} disabled={camera.scale<=MIN_ZOOM} type="button">−</button>
       <button onClick={fit} type="button">Fit island</button>
       <button onClick={() => setShowLabels((value) => !value)} aria-pressed={showLabels} type="button">File names</button>
     </div>

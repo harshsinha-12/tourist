@@ -43,6 +43,28 @@ describe("generateCitySnapshot", () => {
 });
 
 describe("dense repository layouts", () => {
+  it("grows from file count, regardless of how many folders contain those files", () => {
+    const make = (count: number, separateFolders: boolean) => generateCitySnapshot({
+      id: "growth", repository: { name: "growth", revision: "test" },
+      files: Array.from({ length: count }, (_, index) => ({ path: separateFolders ? `folder-${index}/file.ts` : `src/file-${index}.ts`,
+        language: "TypeScript", kind: "source", linesOfCode: 10, changeFrequency: 0, state: "idle" })),
+    });
+    let area = 0;
+    for (const count of [0, 14, 277, 1000]) {
+      const city = make(count, false);
+      expect(city.worldSize).toEqual(make(count, true).worldSize);
+      expect(city.buildings).toHaveLength(count);
+      expect(city.worldSize.width * city.worldSize.depth).toBeGreaterThanOrEqual(area);
+      area = city.worldSize.width * city.worldSize.depth;
+      expect(city.layout!.blocks.filter(b => b.use === "files")).toHaveLength(Math.ceil(count / 4));
+      expect(city.layout!.columns).toBe(city.layout!.rows);
+      for (const building of city.buildings) {
+        const blocks = city.layout!.blocks.filter(b => b.use === "files" && building.position.x > b.bounds.x && building.position.x < b.bounds.x + b.bounds.width
+          && building.position.z > b.bounds.z && building.position.z < b.bounds.z + b.bounds.depth);
+        expect(blocks).toHaveLength(1);
+      }
+    }
+  });
   it("keeps every footprint within its district and plots separate", () => {
     const city = generateCitySnapshot({
       id: "dense", repository: { name: "dense", revision: "test" },
@@ -59,7 +81,9 @@ describe("dense repository layouts", () => {
       expect(building.position.z + building.footprint.depth / 2).toBeLessThanOrEqual(bounds.z + bounds.depth);
     }
     expect(new Set(city.buildings.map(({ position }) => `${position.x}:${position.z}`)).size).toBe(180);
-    expect(city.landmarks.filter((landmark) => landmark.kind !== "command-center").every((landmark) => landmark.position.z > city.worldSize.depth)).toBe(true);
+    expect(city.landmarks.every(({ position }) => position.x >= 0 && position.x <= city.worldSize.width && position.z >= 0 && position.z <= city.worldSize.depth)).toBe(true);
     expect(city.landmarks.find((landmark) => landmark.kind === "command-center")?.position).toMatchObject({ x: city.worldSize.width / 2, z: city.worldSize.depth / 2 });
+    const hall = city.landmarks.find(l => l.kind === "command-center")!;
+    expect(city.buildings.every(b => Math.abs(b.position.x - hall.position.x) >= 3 || Math.abs(b.position.z - hall.position.z) >= 3)).toBe(true);
   });
 });

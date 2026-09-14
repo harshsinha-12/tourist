@@ -114,6 +114,19 @@ export const AnchorSchema = z.object({
   target: AnchorTargetSchema,
 });
 
+// Optional so published v1 reports without a street plan remain readable.
+export const CityLayoutSchema = z.object({
+  blockSize: z.number().positive(),
+  columns: z.number().int().positive(),
+  rows: z.number().int().positive(),
+  origin: z.object({ x: z.number(), z: z.number() }),
+  blocks: z.array(z.object({
+    id: z.string(),
+    bounds: BoundsSchema,
+    use: z.enum(["files", "park", "command-center", "testing-facility", "data-archive", "tool-workshop", "research-lab"]),
+  })),
+});
+
 export const CitySnapshotSchema = z.object({
   schemaVersion: z.literal(CITY_SCHEMA_VERSION),
   id: z.string().min(1),
@@ -123,6 +136,7 @@ export const CitySnapshotSchema = z.object({
   }),
   generatedAt: z.string().datetime(),
   worldSize: z.object({ width: z.number().positive(), depth: z.number().positive() }),
+  layout: CityLayoutSchema.optional(),
   sectors: z.array(SectorSchema),
   districts: z.array(DistrictSchema),
   buildings: z.array(BuildingSchema),
@@ -162,5 +176,6 @@ export type Landmark = z.infer<typeof LandmarkSchema>;
 export type AgentPawn = z.infer<typeof AgentPawnSchema>;
 export type Anchor = z.infer<typeof AnchorSchema>;
 export type CitySnapshot = z.infer<typeof CitySnapshotSchema>;
+export type CityLayout = z.infer<typeof CityLayoutSchema>;
 export type ReportSection = z.infer<typeof ReportSectionSchema>;
 export type PublicReport = z.infer<typeof PublicReportSchema>;

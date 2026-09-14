@@ -1,75 +1,84 @@
-import { PublicReportSchema, type RepositoryFile } from "@tourist/protocol";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { PublicReportSchema, type PublicReport } from "@tourist/protocol";
 import { generateCitySnapshot } from "@tourist/world-generator";
+import { scanLocalRepository } from "./scan-local-repo";
 
-const files: RepositoryFile[] = [
-  { path: "apps/web/app/page.tsx", language: "TypeScript", kind: "source", linesOfCode: 94, changeFrequency: 6, state: "modified" },
-  { path: "apps/web/components/CityCanvas.tsx", language: "TypeScript", kind: "source", linesOfCode: 286, changeFrequency: 9, state: "added" },
-  { path: "apps/web/components/TouristShell.tsx", language: "TypeScript", kind: "source", linesOfCode: 138, changeFrequency: 5, state: "added" },
-  { path: "apps/web/app/styles.css", language: "CSS", kind: "source", linesOfCode: 312, changeFrequency: 4, state: "modified" },
-  { path: "apps/web/lib/fixture-report.ts", language: "TypeScript", kind: "data", linesOfCode: 75, changeFrequency: 2, state: "added" },
-  { path: "packages/protocol/src/index.ts", language: "TypeScript", kind: "source", linesOfCode: 168, changeFrequency: 8, state: "added" },
-  { path: "packages/protocol/test/contracts.test.ts", language: "TypeScript", kind: "test", linesOfCode: 27, changeFrequency: 2, state: "added" },
-  { path: "packages/world-generator/src/index.ts", language: "TypeScript", kind: "source", linesOfCode: 244, changeFrequency: 8, state: "added" },
-  { path: "packages/world-generator/test/generator.test.ts", language: "TypeScript", kind: "test", linesOfCode: 52, changeFrequency: 2, state: "added" },
-  { path: "README.md", language: "Markdown", kind: "documentation", linesOfCode: 342, changeFrequency: 3, state: "idle" },
-  { path: "prd.md", language: "Markdown", kind: "documentation", linesOfCode: 2712, changeFrequency: 7, state: "idle" },
-  { path: "plan.md", language: "Markdown", kind: "documentation", linesOfCode: 294, changeFrequency: 6, state: "modified" },
-  { path: "package.json", language: "JSON", kind: "config", linesOfCode: 19, changeFrequency: 2, state: "added" },
-  { path: "tsconfig.base.json", language: "JSON", kind: "config", linesOfCode: 17, changeFrequency: 1, state: "added" },
-];
+const execFileAsync = promisify(execFile);
+const REPORT_ID = "tourist-city-foundation";
 
-const changedPaths = [
-  "apps/web/components/CityCanvas.tsx",
-  "packages/protocol/src/index.ts",
-  "packages/world-generator/src/index.ts",
-];
+export async function loadLocalRepositoryReport(): Promise<PublicReport> {
+  const root = await repositoryRoot();
+  const { name, revision, files, changedPaths } = await scanLocalRepository(root);
+  const snapshot = generateCitySnapshot({
+    id: "tourist-local-v1",
+    repository: { name, revision },
+    files,
+    report: {
+      changedPaths,
+      anchorPaths: [
+        "apps/web/components/CityCanvas.tsx",
+        "packages/protocol/src/index.ts",
+        "scripts/prepare-building-sprites.py",
+      ],
+      includeTests: true,
+      includePullRequest: true,
+    },
+  });
+  const sectors = snapshot.sectors.map((sector) => sector.name).join(", ");
+  return PublicReportSchema.parse({
+    id: REPORT_ID,
+    title: `${name} as a city`,
+    summary: `${snapshot.buildings.length} source files are on the island, grouped into ${snapshot.sectors.length} sectors (${sectors || "root"}). Gitignored paths, images, and generated sprites stay off the map.`,
+    createdAt: new Date().toISOString(),
+    snapshot,
+    sections: [
+      {
+        id: "section-viewer",
+        eyebrow: "City viewer",
+        title: "Every kept file has a plot",
+        body: "The island is generated from this repository’s source tree. Scripts, packages, apps, and docs become buildings; images and generated assets do not.",
+        status: "success",
+        anchorId: snapshot.anchors.find((anchor) => anchor.id.includes("citycanvas"))?.id ?? "anchor-tests",
+      },
+      {
+        id: "section-scripts",
+        eyebrow: "Scripts",
+        title: "Prepare jobs live on the island too",
+        body: "Python and Node scripts under scripts/ are first-class buildings, the same as application source.",
+        status: "success",
+        anchorId: snapshot.anchors.find((anchor) => anchor.id.includes("prepare-building-sprites"))?.id ?? snapshot.anchors[0]?.id ?? "anchor-tests",
+      },
+      {
+        id: "section-tests",
+        eyebrow: "Verification",
+        title: "The generator is deterministic",
+        body: "Tests cover stable output, unique plots, folder mapping, and the inventory filters that drop media and ignored paths.",
+        status: "success",
+        anchorId: "anchor-tests",
+      },
+      {
+        id: "section-pr",
+        eyebrow: "Delivery",
+        title: "Ready for a public GitHub URL",
+        body: "The same inventory rules can later accept a GitHub tree listing. This stage maps only the local working copy.",
+        status: "neutral",
+        anchorId: "anchor-pull-request",
+      },
+    ],
+  });
+}
 
-const snapshot = generateCitySnapshot({
-  id: "tourist-foundation-v1",
-  repository: { name: "tourist", revision: "city-foundation" },
-  generatedAt: "2026-09-11T12:00:00.000Z",
-  files,
-  report: { changedPaths, includeTests: true, includePullRequest: true },
-});
+export function createRepositoryReport(report: PublicReport): PublicReport {
+  return PublicReportSchema.parse(report);
+}
 
-export const fixtureReport = PublicReportSchema.parse({
-  id: "tourist-city-foundation",
-  title: "The city has its first streets",
-  summary: "A deterministic repository map now turns folders into sectors, files into buildings, and engineering evidence into places you can visit.",
-  createdAt: "2026-09-11T12:00:00.000Z",
-  snapshot,
-  sections: [
-    {
-      id: "section-viewer",
-      eyebrow: "City viewer",
-      title: "A real place for every file",
-      body: "Every file is an independent isometric building, with configurable designs by file type and a general building for unmapped types. Folders define the city districts.",
-      status: "success",
-      anchorId: "anchor-file-apps-web-components-citycanvas-tsx",
-    },
-    {
-      id: "section-contract",
-      eyebrow: "World contract",
-      title: "Snapshots stay useful outside the live app",
-      body: "Versioned schemas keep sectors, buildings, landmarks, pawns, and report anchors portable between live runs and public reports.",
-      status: "success",
-      anchorId: "anchor-file-packages-protocol-src-index-ts",
-    },
-    {
-      id: "section-tests",
-      eyebrow: "Verification",
-      title: "The generator is deterministic",
-      body: "Tests cover stable output, unique plots, folder mapping, changed-file state, and report anchor creation.",
-      status: "success",
-      anchorId: "anchor-tests",
-    },
-    {
-      id: "section-pr",
-      eyebrow: "Delivery",
-      title: "Ready for the report-to-PR bridge",
-      body: "The harbor anchor is reserved for the later real agent run, without pretending that live GitHub execution exists yet.",
-      status: "neutral",
-      anchorId: "anchor-pull-request",
-    },
-  ],
-});
+async function repositoryRoot(): Promise<string> {
+  const start = process.cwd();
+  try {
+    const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8" });
+    return stdout.trim() || start;
+  } catch {
+    return start;
+  }
+}

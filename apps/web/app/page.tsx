@@ -1,6 +1,6 @@
 import { TouristShell } from "../components/TouristShell";
-import { fixtureReport } from "../lib/fixture-report";
+import { loadLocalRepositoryReport } from "../lib/fixture-report";
 
-export default function HomePage() {
-  return <TouristShell report={fixtureReport} />;
+export default async function HomePage() {
+  return <TouristShell report={await loadLocalRepositoryReport()} />;
 }
