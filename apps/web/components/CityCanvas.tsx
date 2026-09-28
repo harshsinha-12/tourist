@@ -57,6 +57,7 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     return { x: (1000 - scene.width * scale) / 2, y: (700 - scene.height * scale) / 2, scale };
   });
   const [showLabels, setShowLabels] = useState(true);
+  const [useLayoutZoom, setUseLayoutZoom] = useState(false);
   const [hoveredBlockId, setHoveredBlockId] = useState<string>();
   const drag = useRef<{ x: number; y: number; origin: Camera; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
@@ -78,6 +79,11 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     return () => observer.disconnect();
   }, []);
   useEffect(fit, [fit]);
+  useEffect(() => {
+    // Chromium can drop large composited tiles when the entire city is
+    // transformed. Layout zoom paints the terrain and sprites separately.
+    setUseLayoutZoom(/Chrome\/|Chromium\/|Edg\//.test(navigator.userAgent));
+  }, []);
   useEffect(() => {
     const point = target?.type === "point" ? scene.project(target.position.x,target.position.z) : focusId ? scene.targets.get(focusId) : undefined;
     if (point) setCamera({ x: size.width/2-point.x*.85, y: size.height/2-(point.y-70)*.85, scale: .85 });
@@ -107,6 +113,15 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     ]).flat(),
   ];
   const allRoadRoutes = map.streets.map(([a, b]) => [scene.project(a.x, a.z), scene.project(b.x, b.z)] as const);
+  // Keep each painted SVG viewport below common GPU texture limits. A single
+  // multi-thousand-pixel SVG can lose rectangular terrain regions while panning.
+  const groundTileSize = 2048;
+  const groundTiles = Array.from({ length: Math.ceil(scene.width / groundTileSize) * Math.ceil(scene.height / groundTileSize) }, (_, index) => {
+    const columns = Math.ceil(scene.width / groundTileSize);
+    const x = (index % columns) * groundTileSize;
+    const y = Math.floor(index / columns) * groundTileSize;
+    return { x, y, width: Math.min(groundTileSize + 1, scene.width - x), height: Math.min(groundTileSize + 1, scene.height - y) };
+  });
   const drawables = [
     ...snapshot.buildings.map((building) => ({ id: building.id, position: building.position, building })),
     ...snapshot.landmarks.map((landmark) => ({ id: landmark.id, position: landmark.position, landmark })),
@@ -142,8 +157,10 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
         if (shift) { event.preventDefault(); setCamera((value) => ({ ...value, x: value.x+shift[0], y: value.y+shift[1] })); }
         if (["+", "=", "-"].includes(event.key)) { event.preventDefault(); setCamera((value) => zoomAt(value, { x: size.width/2, y: size.height/2 }, value.scale*(event.key === "-" ? .8 : 1.25))); }
       }}>
-      <div className={`city-artboard ${showLabels ? "show-labels" : ""}`} style={{ width: scene.width, height: scene.height, transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})` }}>
-        <svg className="city-ground" width={scene.width} height={scene.height} aria-hidden="true">
+      <div className="city-artboard-position" style={{ left: useLayoutZoom ? camera.x : 0, top: useLayoutZoom ? camera.y : 0 }}>
+      <div className={`city-artboard ${showLabels ? "show-labels" : ""}`} style={{ width: scene.width, height: scene.height,
+        ...(useLayoutZoom ? { zoom: camera.scale } : { transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})` }) }}>
+        <svg className="city-ground-definitions" width="0" height="0" aria-hidden="true">
           <defs>
             <mask id="street-junction-mask">
               <rect width={scene.width} height={scene.height} fill="white" />
@@ -162,7 +179,7 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
             </pattern>
             <clipPath id="city-island-clip"><polygon points={scene.polygon(island)} /></clipPath>
           </defs>
-          <rect width={scene.width} height={scene.height} fill="#1f7897" />
+          <g id="city-ground-content">
           <g className="water-glints" aria-hidden="true">
             {Array.from({ length: 26 }, (_, index) => {
               const x = 60 + ((index * 197) % Math.max(scene.width - 120, 1));
@@ -211,7 +228,13 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
                 <polygon points={scene.polygon({ z: p.z + sign * .95, x: p.x - .32 + n * .18, depth: .4, width: .08 })} fill="#f0eee0" />
               </g>)))}
           </g>
+          </g>
         </svg>
+        {groundTiles.map((tile) => <svg key={`${tile.x}-${tile.y}`} className="city-ground"
+          style={{ left: tile.x, top: tile.y, width: tile.width, height: tile.height }}
+          viewBox={`${tile.x} ${tile.y} ${tile.width} ${tile.height}`} aria-hidden="true">
+          <use href="#city-ground-content" />
+        </svg>)}
         <CityTraffic map={map} scene={scene} />
         <CityShips
           scene={scene}
@@ -266,6 +289,7 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
           <LandmarkSprite asset="builder-worker" className="builder-sprite" /><span className="builder-status">BUILDER · IDLE</span>
         </div>}
         {snapshot.buildings.length===0 && <div className="city-empty" style={{ left: scene.width/2, top: scene.height/2 }}>No files in this snapshot</div>}
+      </div>
       </div>
     </div>
     {chrome && <div className="map-controls glass-panel" aria-label="Map controls">

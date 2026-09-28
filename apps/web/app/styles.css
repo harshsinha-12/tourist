@@ -36,7 +36,9 @@ button, input { font: inherit; }
 .pixel-city { position: absolute; inset: 0; background: #237d9a; }
 .city-scroll { position: absolute; inset: 0; overflow: auto; scrollbar-color: #71bca5 #194e60; }
 .city-artboard { position: relative; transform-origin: top left; }
-.city-ground { position: absolute; inset: 0; pointer-events: none; }
+.city-artboard-position { position: absolute; }
+.city-ground { position: absolute; pointer-events: none; }
+.city-ground-definitions { position: absolute; overflow: hidden; }
 .sector-label { fill: #f6e5ae; font-size: 15px; font-weight: 900; paint-order: stroke; stroke: #254f47; stroke-width: 5px; }
 .district-label { position: absolute; translate: -50% -100%; color: #234f40; font-size: 9px; font-weight: 800; pointer-events: none; }
 .city-plot { position: absolute; width: 100px; height: 120px; translate: -50% -83%; }
@@ -177,9 +179,8 @@ button, input { font: inherit; }
 
 /* The map uses independent transparent sprites over generated terrain. */
 .pixel-city { background: radial-gradient(ellipse at 50% 30%, #328ca0, #15546d); }
-.city-viewport { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; outline-offset: -4px; }
+.city-viewport { position: absolute; z-index: 0; inset: 0; overflow: hidden; touch-action: none; cursor: grab; outline-offset: -4px; }
 .city-viewport:active { cursor: grabbing; }
-.city-artboard { will-change: transform; }
 .city-plot { z-index: 4; width: 128px; height: 128px; translate: -50% -83%; }
 .file-building { height: 128px; }
 .city-plot .building-name { position: absolute; top: 112px; left: 50%; translate: -50% 0; width: max-content; max-width: 160px; font-size: 11px; padding: 5px 8px; opacity: 0; pointer-events: none; }
@@ -197,7 +198,6 @@ button, input { font: inherit; }
 .city-empty { position: absolute; translate: -50% -50%; color: #e4edd7; background: #173d42; padding: 20px; font-size: 20px; }
 .environment-layer { position: absolute; inset: 0; pointer-events: none; }
 .city-viewport { background-color: #268fb8; background-image: url("/assets/environment/ocean-tiles.svg"); background-size: 96px 48px; }
-.city-ground > rect { display: none; }
 .environment-sprite { position: absolute; display: block; height: auto; translate: -50% -100%; image-rendering: auto; user-select: none; }
 .environment-tree { z-index: 2; filter: drop-shadow(2px 4px 0 #214b3c55); }
 .environment-road { z-index: 0; opacity: .98; }
