@@ -11,9 +11,9 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: #168ad1; color: var(--ink); }
 body { font-family: "SFMono-Regular", "Cascadia Code", "Roboto Mono", ui-monospace, monospace; }
-body:has(.tourist-shell) { overflow: hidden; height: 100%; }
+body:has(.tourist-shell) { overflow: hidden; height: 100dvh; }
 button, input { font: inherit; }
-.tourist-shell { min-height: 100vh; background: #168ad1; }
+.tourist-shell { min-height: 100dvh; background: #168ad1; }
 
 .topbar {
   position: fixed; inset: 0 0 auto; z-index: 30; height: 60px;
@@ -31,7 +31,7 @@ button, input { font: inherit; }
 .share-button { justify-self: end; color: #092135; background: var(--amber); border: 2px solid #fff1b5; border-radius: 3px; padding: 8px 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; box-shadow: 3px 3px 0 #9b671b; }
 .share-button:hover { translate: 1px 1px; box-shadow: 2px 2px 0 #9b671b; }
 
-.world-stage { position: fixed; inset: 60px 0 0; overflow: hidden; background: #268fb8 url("/assets/environment/ocean-tiles.svg") / 96px 48px; }
+.world-stage { position: fixed; inset: 60px 0 0; height: calc(100dvh - 60px); overflow: hidden; background: #268fb8 url("/assets/environment/ocean-tiles.svg") / 96px 48px; }
 .glass-panel { border: 2px solid var(--panel-border); border-radius: 4px; background: var(--panel); box-shadow: 5px 5px 0 rgba(2, 20, 34, 0.42); }
 .pixel-city { position: absolute; inset: 0; background: #237d9a; }
 .city-scroll { position: absolute; inset: 0; overflow: auto; scrollbar-color: #71bca5 #194e60; }
@@ -55,7 +55,7 @@ button, input { font: inherit; }
 .city-landmark.is-active svg { filter: drop-shadow(0 0 8px #ffe296); }
 .point-beacon { position: absolute; width: 24px; height: 24px; border: 4px solid #ffe296; border-radius: 50%; translate: -50% -50%; }
 
-.map-controls { position: absolute; z-index: 16; right: 18px; top: 18px; display: flex; padding: 4px; }
+.map-controls { position: absolute; z-index: 16; right: 18px; top: 18px; display: flex; flex-wrap: wrap; max-width: calc(100vw - 24px); padding: 4px; }
 .map-controls button { border: 0; border-right: 1px solid #31596e; padding: 7px 9px; color: #d5ebf2; background: transparent; font-size: 8px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
 .map-controls button:last-child { border-right: 0; }
 .map-controls button:hover:not(:disabled) { color: var(--amber); background: #113b52; }
@@ -177,7 +177,7 @@ button, input { font: inherit; }
 
 /* The map uses independent transparent sprites over generated terrain. */
 .pixel-city { background: radial-gradient(ellipse at 50% 30%, #328ca0, #15546d); }
-.city-viewport { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; outline-offset: -4px; }
+.city-viewport { position: absolute; inset: 0; overflow: hidden; overscroll-behavior: contain; touch-action: none; cursor: grab; outline-offset: -4px; }
 .city-viewport:active { cursor: grabbing; }
 .city-artboard { will-change: transform; }
 .city-plot { z-index: 4; width: 128px; height: 128px; translate: -50% -83%; }

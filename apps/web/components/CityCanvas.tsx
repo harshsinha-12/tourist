@@ -1,11 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import type { CitySnapshot, Building, Landmark, LandmarkKind } from "@tourist/protocol";
+import type { Anchor, CitySnapshot, Building, Landmark, LandmarkKind } from "@tourist/protocol";
 import { FileBuilding } from "./buildings/FileBuilding";
 import { EnvironmentSprite, type EnvironmentAsset } from "./EnvironmentSprite";
 import { LandmarkSprite, type CustomLandmarkAsset } from "./LandmarkSprite";
-import { createCityScene, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib/city-scene";
+import {
+  createCityScene,
+  fitCamera,
+  fitScaleFor,
+  focusCamera,
+  isMapZoomWheel,
+  MAX_ZOOM,
+  minZoomFor,
+  preserveWorldPoint,
+  settleCamera,
+  zoomAt,
+  type Camera,
+} from "../lib/city-scene";
 import { createCityMap } from "../lib/city-map";
 import { CityTraffic } from "./CityTraffic";
 import { CityShips } from "./CityShips";
@@ -33,6 +45,11 @@ function LandmarkArt({ asset, className = "" }: { asset: EnvironmentAsset | Cust
     : <EnvironmentSprite asset={asset as EnvironmentAsset} className={className} />;
 }
 
+function anchorPoint(scene: ReturnType<typeof createCityScene>, target: Anchor["target"] | undefined, focusId: string | undefined) {
+  if (target?.type === "point") return scene.project(target.position.x, target.position.z);
+  return focusId ? scene.targets.get(focusId) : undefined;
+}
+
 function SceneSprite({ asset, scene, x, z, width, className = "", style }: {
   asset: EnvironmentAsset;
   scene: ReturnType<typeof createCityScene>;
@@ -51,49 +68,99 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
   const map = useMemo(() => createCityMap(snapshot), [snapshot]);
   const trees = map.trees;
   const viewport = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 1000, height: 700 });
-  const [camera, setCamera] = useState<Camera>(() => {
-    const scale = Math.max(MIN_ZOOM, Math.min(1, 960 / scene.width, 630 / scene.height));
-    return { x: (1000 - scene.width * scale) / 2, y: (700 - scene.height * scale) / 2, scale };
-  });
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [camera, setCamera] = useState<Camera>(() => fitCamera(1000, 700, scene.width, scene.height));
   const [showLabels, setShowLabels] = useState(true);
   const [hoveredBlockId, setHoveredBlockId] = useState<string>();
   const drag = useRef<{ x: number; y: number; origin: Camera; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
+  const fitted = useRef(false);
+  const fittedScene = useRef(scene);
+  const previousSize = useRef(size);
+  const sizeRef = useRef(size);
+  const sceneRef = useRef(scene);
   const anchor = snapshot.anchors.find((item) => item.id === focusedAnchorId);
   const target = anchor?.target;
   const focusId = target?.type === "building" ? target.buildingId : target?.type === "landmark" ? target.landmarkId : target?.type === "district" ? target.districtId : undefined;
+  const focusRef = useRef({ focusId, target });
+  sizeRef.current = size;
+  sceneRef.current = scene;
+  focusRef.current = { focusId, target };
+  const minZoom = size.width > 0 ? minZoomFor(fitScaleFor(size.width, size.height, scene.width, scene.height)) : minZoomFor(fitScaleFor(1000, 700, scene.width, scene.height));
   const fit = useCallback(() => {
-    const scale = Math.max(MIN_ZOOM, Math.min(1, (size.width-40)/scene.width, (size.height-70)/scene.height));
-    setCamera({ x: (size.width-scene.width*scale)/2, y: (size.height-scene.height*scale)/2, scale });
-  }, [scene, size]);
+    const viewportSize = sizeRef.current;
+    const currentScene = sceneRef.current;
+    if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
+    setCamera(fitCamera(viewportSize.width, viewportSize.height, currentScene.width, currentScene.height));
+  }, []);
+  const zoomBy = useCallback((factor: number, point?: { x: number; y: number }) => {
+    const viewportSize = sizeRef.current;
+    const currentScene = sceneRef.current;
+    const floor = minZoomFor(fitScaleFor(viewportSize.width, viewportSize.height, currentScene.width, currentScene.height));
+    const origin = point ?? { x: viewportSize.width / 2, y: viewportSize.height / 2 };
+    setCamera((value) => settleCamera(
+      zoomAt(value, origin, value.scale * factor, floor),
+      viewportSize.width, viewportSize.height, currentScene.width, currentScene.height,
+    ));
+  }, []);
 
   useEffect(() => {
     const node = viewport.current;
     if (!node) return;
     const observer = new ResizeObserver(([entry]) => {
-      if (entry) setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      if (!entry) return;
+      const width = entry.contentRect.width;
+      const height = entry.contentRect.height;
+      if (width <= 0 || height <= 0) return;
+      setSize((current) => current.width === width && current.height === height ? current : { width, height });
     });
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  useEffect(fit, [fit]);
   useEffect(() => {
-    const point = target?.type === "point" ? scene.project(target.position.x,target.position.z) : focusId ? scene.targets.get(focusId) : undefined;
-    if (point) setCamera({ x: size.width/2-point.x*.85, y: size.height/2-(point.y-70)*.85, scale: .85 });
-  }, [focusId, target, scene, size]);
+    if (size.width <= 0 || size.height <= 0) return;
+    const previous = previousSize.current;
+    const sceneChanged = fittedScene.current !== scene;
+    if (!fitted.current || sceneChanged) {
+      fitted.current = true;
+      fittedScene.current = scene;
+      const point = anchorPoint(scene, focusRef.current.target, focusRef.current.focusId);
+      setCamera(point
+        ? focusCamera(point, size.width, size.height, scene.width, scene.height)
+        : fitCamera(size.width, size.height, scene.width, scene.height));
+    } else if (previous.width > 0 && (previous.width !== size.width || previous.height !== size.height)) {
+      setCamera((current) => settleCamera(
+        preserveWorldPoint(current, previous, size),
+        size.width, size.height, scene.width, scene.height,
+      ));
+    }
+    previousSize.current = size;
+  }, [size, scene]);
+  useEffect(() => {
+    const point = anchorPoint(scene, target, focusId);
+    const viewportSize = sizeRef.current;
+    if (!point || viewportSize.width <= 0 || viewportSize.height <= 0) return;
+    setCamera(focusCamera(point, viewportSize.width, viewportSize.height, scene.width, scene.height));
+  }, [focusId, target, scene]);
   useEffect(() => {
     const node = viewport.current;
     if (!node) return;
     const wheel = (event: WheelEvent) => {
+      if (!isMapZoomWheel(event)) return;
       event.preventDefault();
       const bounds = node.getBoundingClientRect();
-      const delta = event.deltaMode === 1 ? event.deltaY*16 : event.deltaMode === 2 ? event.deltaY*size.height : event.deltaY;
-      setCamera((value) => zoomAt(value, { x: event.clientX-bounds.left, y: event.clientY-bounds.top }, value.scale*Math.exp(-delta*.0015)));
+      const viewportSize = sizeRef.current;
+      const currentScene = sceneRef.current;
+      const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * viewportSize.height : event.deltaY;
+      const floor = minZoomFor(fitScaleFor(viewportSize.width, viewportSize.height, currentScene.width, currentScene.height));
+      setCamera((value) => settleCamera(
+        zoomAt(value, { x: event.clientX - bounds.left, y: event.clientY - bounds.top }, value.scale * Math.exp(-delta * 0.0015), floor),
+        viewportSize.width, viewportSize.height, currentScene.width, currentScene.height,
+      ));
     };
     node.addEventListener("wheel", wheel, { passive: false });
     return () => node.removeEventListener("wheel", wheel);
-  }, [size.height]);
+  }, []);
 
   const island = { x: 0, z: 0, width: scene.maxX, depth: scene.maxZ };
   const coastTiles = [
@@ -130,7 +197,12 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
         if (Math.abs(dx)+Math.abs(dy)>5) {
           start.moved = true;
           event.currentTarget.setPointerCapture(event.pointerId);
-          setCamera({ ...start.origin, x: start.origin.x+dx, y: start.origin.y+dy });
+          const viewportSize = sizeRef.current;
+          const currentScene = sceneRef.current;
+          setCamera(settleCamera(
+            { ...start.origin, x: start.origin.x + dx, y: start.origin.y + dy },
+            viewportSize.width, viewportSize.height, currentScene.width, currentScene.height,
+          ));
         }
       }}
       onPointerUp={() => { suppressClick.current = drag.current?.moved ?? false; drag.current = null; }}
@@ -139,8 +211,16 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
       onKeyDown={(event) => {
         const shifts: Record<string, [number,number]> = { ArrowLeft: [60,0], ArrowRight: [-60,0], ArrowUp: [0,60], ArrowDown: [0,-60] };
         const shift = shifts[event.key];
-        if (shift) { event.preventDefault(); setCamera((value) => ({ ...value, x: value.x+shift[0], y: value.y+shift[1] })); }
-        if (["+", "=", "-"].includes(event.key)) { event.preventDefault(); setCamera((value) => zoomAt(value, { x: size.width/2, y: size.height/2 }, value.scale*(event.key === "-" ? .8 : 1.25))); }
+        if (shift) {
+          event.preventDefault();
+          const viewportSize = sizeRef.current;
+          const currentScene = sceneRef.current;
+          setCamera((value) => settleCamera(
+            { ...value, x: value.x + shift[0], y: value.y + shift[1] },
+            viewportSize.width, viewportSize.height, currentScene.width, currentScene.height,
+          ));
+        }
+        if (["+", "=", "-"].includes(event.key)) { event.preventDefault(); zoomBy(event.key === "-" ? 0.8 : 1.25); }
       }}>
       <div className={`city-artboard ${showLabels ? "show-labels" : ""}`} style={{ width: scene.width, height: scene.height, transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})` }}>
         <svg className="city-ground" width={scene.width} height={scene.height} aria-hidden="true">
@@ -269,9 +349,9 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
       </div>
     </div>
     {chrome && <div className="map-controls glass-panel" aria-label="Map controls">
-      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*1.25))} disabled={camera.scale>=MAX_ZOOM} type="button">+</button>
+      <button onClick={() => zoomBy(1.25)} disabled={camera.scale>=MAX_ZOOM} type="button">+</button>
       <span className="map-zoom">{Math.round(camera.scale*100)}%</span>
-      <button onClick={() => setCamera((value) => zoomAt(value,{ x: size.width/2,y:size.height/2 },value.scale*.8))} disabled={camera.scale<=MIN_ZOOM} type="button">−</button>
+      <button onClick={() => zoomBy(0.8)} disabled={camera.scale<=minZoom+1e-4} type="button">−</button>
       <button onClick={fit} type="button">Fit island</button>
       <button onClick={() => setShowLabels((value) => !value)} aria-pressed={showLabels} type="button">File names</button>
     </div>}
