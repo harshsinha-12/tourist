@@ -25,6 +25,9 @@ test("solo agent edits through the registry and leaves a tested local commit", a
     expect(run.agents).toEqual(["coder"]);
     expect(run.tools.some((entry) => entry.name === "write_file")).toBe(true);
     expect(run.tools.some((entry) => entry.name === "run_tests" && entry.result.exitCode === 0)).toBe(true);
+    expect(run.events.some((event) => event.type === "agent.spawned" && event.agent === "coder")).toBe(true);
+    expect(run.events.some((event) => event.type === "file.changed" && event.path === "math.js")).toBe(true);
+    expect(run.events.some((event) => event.type === "test.passed")).toBe(true);
     expect(run.githubCalls[0]?.name).toBe("create_pull_request");
     expect(JSON.stringify(run)).not.toContain("test-secret-must-not-appear");
     expect(run.commit).toMatch(/^[0-9a-f]+$/);

@@ -1,11 +1,12 @@
 # Tourist agent runtime
 
-The runtime has a provider-neutral model router, a typed local tool registry, and two working task paths:
+The runtime has a provider-neutral model router, a typed local tool registry, and three task paths:
 
 - `solo_coder`: one coding agent.
 - `coder_tester_reviewer`: sequential specialists with shared task memory and one review return to the coder.
+- `swarm`: opt-in disjoint file assignments in parallel Git worktrees, followed by one integration branch and tests.
 
-`runTask` selects between them. Stage 4 swarm worktrees, Stage 6 persistent memory, and Stage 8 live GitHub delivery are not implemented. The GitHub tools record intended calls only.
+`runTask` selects among them. A swarm requires two to four explicit file assignments; a single file task remains solo or sequential. A failed integrated test returns once to the owner identified by a file name or `testHints` in the failure output. If ownership is ambiguous, the run stops for review. Stage 6 persistent memory and Stage 8 live GitHub delivery are not implemented. The GitHub tools record intended calls only.
 
 ## Models and keys
 
@@ -36,3 +37,14 @@ pnpm --filter @tourist/agent-runtime fixture /path/to/disposable-checkout owner 
 ```
 
 `runTask` and `runSoloTask` can also be imported from `@tourist/agent-runtime`. The CLI writes a redacted tool trajectory to `.git/tourist-last-run.json` in the checkout, leaving the worktree clean. The local test process is **not an OS sandbox**; use disposable, trusted fixtures until an isolated sandbox provider is wired.
+
+For opt-in parallel work, put disjoint assignments in a JSON file and run `tourist run --repo /path/to/checkout --task "Update both modules" --swarm-parts parts.json`. The same `swarmParts` field is accepted by the cloud API. Example:
+
+```json
+[
+  { "goal": "Update the parser", "files": ["src/parser.ts"], "testHints": ["parser"] },
+  { "goal": "Update the renderer", "files": ["src/renderer.ts"], "testHints": ["renderer"] }
+]
+```
+
+The assignment is validated with Zod and each coder can write only its assigned files. The run record includes topology, shared task memory, a redacted tool trace, and events. Tool event rules live in `src/config/tool-events.ts`. The run-scoped `build_tool` capability accepts a Zod-validated manifest for a constrained read-only line-count tool; it runs manifest fixtures before registration and exposes successful tools in the next model phase. Generated JavaScript or shell tools are not enabled.

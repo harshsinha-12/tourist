@@ -14,6 +14,8 @@ const call = (name: string, input: object, n: number) => ({ content: [{ type: "t
 test("supervisor chooses a small task without specialist handoffs", () => {
   expect(chooseTopology("Rename a variable")).toBe("solo_coder");
   expect(chooseTopology("Fix the addition bug and add regression coverage")).toBe("coder_tester_reviewer");
+  expect(chooseTopology("Change one file", [{ files: ["one.js"] }])).not.toBe("swarm");
+  expect(chooseTopology("Change two files", [{ files: ["one.js"] }, { files: ["two.js"] }])).toBe("swarm");
 });
 
 test("coder, tester, and reviewer share task memory in order", async () => {

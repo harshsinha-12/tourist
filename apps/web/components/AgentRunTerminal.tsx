@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-interface RunEvent { type: "stage" | "tool"; at: string; stage?: string; trace?: { name: string; input?: Record<string, unknown>; result?: Record<string, unknown> } }
+interface RunEvent { type: "stage" | "tool" | "agent_event"; at: string; stage?: string; trace?: { name: string; input?: Record<string, unknown>; result?: Record<string, unknown> }; event?: { type: string; agent?: string; path?: string; tool?: string } }
 interface Feed { status: string; events: RunEvent[] }
 
 function describe(event: RunEvent): string {
   if (event.type === "stage") return event.stage ?? "Working";
+  if (event.type === "agent_event") return [event.event?.type, event.event?.agent, event.event?.path ?? event.event?.tool].filter(Boolean).join(" · ") || "Agent event";
   const trace = event.trace;
   if (!trace) return "Tool used";
   const path = typeof trace.input?.path === "string" ? ` ${trace.input.path}` : "";

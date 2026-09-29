@@ -18,7 +18,8 @@ export const writeFileTool = defineTool({
   id: "write_file", description: "Write a UTF-8 file inside the local checkout.",
   inputSchema: z.object({ path: z.string().min(1), content: z.string().max(200_000) }),
   outputSchema: z.object({ path: z.string(), bytes: z.number().int() }), permissions: ["write"],
-  async execute({ path, content }, { checkout }) {
+  async execute({ path, content }, { checkout, allowedWrites }) {
+    if (allowedWrites && !allowedWrites.includes(path)) throw new Error(`Write outside assigned files: ${path}`);
     await writeFile(await safePath(checkout, path, true), content, { encoding: "utf8", flag: "w" });
     return { path, bytes: Buffer.byteLength(content) };
   },

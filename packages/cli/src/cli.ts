@@ -17,7 +17,7 @@ import { readRibbonCommand } from "./ribbon.js";
 import { selectModel } from "./model-picker.js";
 
 const execFileAsync = promisify(execFile);
-const help = `Tourist coding agents\n\nUsage:\n  tourist                    Interactive terminal\n  tourist models\n  tourist run|plan|ask|debug --repo <path|owner/repo> --task <text> [--model <id>] [--cloud <url>]\n  tourist multi-task --repo <path|owner/repo> --tasks <json-file> [--cloud <url>]\n  tourist status <run-id> --cloud <url>\n  tourist memory list|add|remove --repo <path> [--scope user|codebase] [--text <note>] [--id <id>]\n\nInteractive commands: /plan, /ask, /debug, /run, /multi-task, /status, /memory, /model, /repo, /cloud, /local, /help, /exit.\nOptions: --reasoning low|medium|high, --detach (cloud), --output <file>.\nKeys: OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY. Cloud mode also needs TOURIST_CLOUD_TOKEN.\nPlan and ask are read-only. Debug reproduces, fixes, and tests. Multi-task runs independent tasks in separate worktrees or cloud sandboxes.\n`;
+const help = `Tourist coding agents\n\nUsage:\n  tourist                    Interactive terminal\n  tourist models\n  tourist run|plan|ask|debug --repo <path|owner/repo> --task <text> [--model <id>] [--cloud <url>]\n  tourist multi-task --repo <path|owner/repo> --tasks <json-file> [--cloud <url>]\n  tourist status <run-id> --cloud <url>\n  tourist memory list|add|remove --repo <path> [--scope user|codebase] [--text <note>] [--id <id>]\n\nInteractive commands: /plan, /ask, /debug, /run, /multi-task, /status, /memory, /model, /repo, /cloud, /local, /help, /exit.\nOptions: --reasoning low|medium|high, --swarm-parts <json-file> (run), --detach (cloud), --output <file>.\nKeys: OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY. Cloud mode also needs TOURIST_CLOUD_TOKEN.\nPlan and ask are read-only. Debug reproduces, fixes, and tests. Multi-task runs independent tasks in separate worktrees or cloud sandboxes.\n`;
 
 function option(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -36,6 +36,7 @@ async function execute(options: RunOptions, checkoutOverride?: string, sessionNo
     if (!/^[\w-]+\/[\w.-]+$/.test(options.repo)) throw new Error("Cloud runs require a public owner/repo name");
     const created = await cloudRequest(options.cloud, "POST", "v1/runs", {
       repo: options.repo, task: options.task, modelId: options.modelId, mode: options.mode,
+      ...(options.swarmParts ? { swarmParts: options.swarmParts } : {}),
       memoryPack: [...notes.map((note) => `[${note.id}] ${note.text}`), ...sessionNotes].slice(0, 8),
       ...(options.reasoningLevel ? { reasoningLevel: options.reasoningLevel } : {}),
     }, options.modelId) as { id: string };
@@ -45,6 +46,7 @@ async function execute(options: RunOptions, checkoutOverride?: string, sessionNo
   if (options.detach) throw new Error("--detach is only available with --cloud");
   const repo = localRepository(options.repo);
   return runAgentRequest({ ...repo, checkout: checkoutOverride ?? repo.checkout, task: options.task, mode: options.mode,
+    ...(options.swarmParts ? { swarmParts: options.swarmParts } : {}),
     ...(baseBranch ? { baseBranch } : {}),
     ...(onTool ? { onTool } : {}),
     memoryPack: [...notes.map((note) => `[${note.id}] ${note.text}`), ...sessionNotes].slice(0, 8),

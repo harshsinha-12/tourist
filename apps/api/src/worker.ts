@@ -13,7 +13,9 @@ export async function runWorker(taskPath: string, resultPath: string): Promise<v
   const eventPath = process.env.TOURIST_EVENTS_FILE;
   const run = await runAgentRequest({
     checkout, owner, repo, task: input.task, mode: input.mode, ...(input.memoryPack ? { memoryPack: input.memoryPack } : {}),
+    ...(input.swarmParts ? { swarmParts: input.swarmParts } : {}),
     ...(eventPath ? { onTool: async (trace: unknown) => { await appendFile(eventPath, `${JSON.stringify({ type: "tool", at: new Date().toISOString(), trace })}\n`); } } : {}),
+    ...(eventPath ? { onEvent: async (event: unknown) => { await appendFile(eventPath, `${JSON.stringify({ type: "agent_event", at: new Date().toISOString(), event })}\n`); } } : {}),
     model: { modelId: input.modelId, ...(input.reasoningLevel ? { reasoningLevel: input.reasoningLevel } : {}) },
   });
   const patch = input.mode === "ask" || input.mode === "plan" ? "" : (await execFileAsync("git", ["-C", checkout, "format-patch", "-1", "--stdout"], { maxBuffer: 5_000_000 })).stdout;

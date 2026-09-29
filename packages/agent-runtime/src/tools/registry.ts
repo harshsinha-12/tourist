@@ -1,9 +1,10 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { ToolContext, ToolDefinition } from "./types.js";
 import { readFileTool, searchTool, writeFileTool } from "./files.js";
 import { shellTool, runTestsTool } from "./process.js";
-import { gitBranchTool, gitCommitTool, gitDiffTool, gitStatusTool } from "./git.js";
+import { gitBranchTool, gitCommitTool, gitDiffTool, gitStatusTool, gitWorktreeAddTool, gitWorktreeRemoveTool, gitDeletePartBranchTool, gitShowFilesTool, gitMergePartTool, gitMergeAbortTool, gitHeadTool } from "./git.js";
 import { createPullRequestTool, deleteMemoryTool, embedCodebaseTool, getIssueTool, listIssuesTool, readMemoryTool, writeMemoryTool } from "./recording.js";
+import { buildAndRegisterTool, toolManifestSchema } from "./builder.js";
 
 export class ToolRegistry {
   private readonly tools = new Map<string, ToolDefinition>();
@@ -33,10 +34,19 @@ export class ToolRegistry {
   }
 }
 
-export function createToolRegistry(checkout: string, githubCalls: ToolContext["githubCalls"] = []): ToolRegistry {
-  const registry = new ToolRegistry({ checkout, githubCalls });
-  for (const tool of [readFileTool, writeFileTool, searchTool, shellTool, runTestsTool, gitBranchTool, gitStatusTool, gitDiffTool, gitCommitTool, listIssuesTool, getIssueTool, createPullRequestTool, embedCodebaseTool, readMemoryTool, writeMemoryTool, deleteMemoryTool]) {
+export function createToolRegistry(checkout: string, githubCalls: ToolContext["githubCalls"] = [], allowedWrites?: readonly string[]): ToolRegistry {
+  const registry = new ToolRegistry({ checkout, githubCalls, ...(allowedWrites ? { allowedWrites } : {}) });
+  for (const tool of [readFileTool, writeFileTool, searchTool, shellTool, runTestsTool, gitBranchTool, gitStatusTool, gitDiffTool, gitCommitTool, gitWorktreeAddTool, gitWorktreeRemoveTool, gitDeletePartBranchTool, gitShowFilesTool, gitMergePartTool, gitMergeAbortTool, gitHeadTool, listIssuesTool, getIssueTool, createPullRequestTool, embedCodebaseTool, readMemoryTool, writeMemoryTool, deleteMemoryTool]) {
     registry.register(tool as ToolDefinition);
   }
+  registry.register({
+    id: "build_tool", description: "Create a run-scoped read tool from a manifest after its fixtures pass.",
+    inputSchema: toolManifestSchema,
+    outputSchema: (awaitableBuildOutput),
+    permissions: ["read"],
+    async execute(manifest) { return { id: await buildAndRegisterTool(registry, { checkout, githubCalls }, manifest) }; },
+  });
   return registry;
 }
+
+const awaitableBuildOutput = z.object({ id: z.string() });

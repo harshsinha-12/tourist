@@ -3,6 +3,7 @@ import type { z } from "zod";
 export interface ToolContext {
   checkout: string;
   githubCalls: Array<{ name: string; input: unknown }>;
+  allowedWrites?: readonly string[];
 }
 
 export interface ToolDefinition<I extends z.ZodType = z.ZodType, O extends z.ZodType = z.ZodType> {

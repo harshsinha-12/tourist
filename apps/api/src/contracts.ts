@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getModelConfig, type ModelId } from "../../../packages/agent-runtime/src/models/config.js";
+import { swarmPartsSchema } from "../../../packages/agent-runtime/src/agents/swarm.js";
 
 export const SubmissionSchema = z.object({
   repo: z.string().regex(/^[a-zA-Z0-9-]{1,39}\/[a-zA-Z0-9_.-]{1,100}$/),
@@ -8,6 +9,7 @@ export const SubmissionSchema = z.object({
   reasoningLevel: z.enum(["low", "medium", "high"]).optional(),
   mode: z.enum(["run", "plan", "ask", "debug"]).default("run"),
   memoryPack: z.array(z.string().max(1_000)).max(8).optional(),
+  swarmParts: swarmPartsSchema.optional(),
 }).strict();
 
 export type Submission = z.infer<typeof SubmissionSchema> & { modelId: ModelId };
@@ -15,6 +17,7 @@ export type Submission = z.infer<typeof SubmissionSchema> & { modelId: ModelId }
 export function parseSubmission(input: unknown): Submission {
   const parsed = SubmissionSchema.parse(input);
   const model = getModelConfig(parsed.modelId);
+  if (parsed.swarmParts && parsed.mode !== "run") throw new Error("Swarm parts require run mode");
   if (parsed.reasoningLevel && !model.options.reasoningLevels?.includes(parsed.reasoningLevel)) throw new Error(`Reasoning level not supported by ${parsed.modelId}`);
   return parsed as Submission;
 }

@@ -5,7 +5,7 @@ export interface CloudRunRecord {
   status: "queued" | "running" | "succeeded" | "failed";
   result?: unknown;
   error?: string;
-  events?: Array<{ type: "stage" | "tool"; stage?: string; trace?: { name?: string; input?: { path?: string; program?: string } } }>;
+  events?: Array<{ type: "stage" | "tool" | "agent_event"; stage?: string; trace?: { name?: string; input?: { path?: string; program?: string } }; event?: { type: string; agent?: string; path?: string; tool?: string } }>;
 }
 
 function credential(modelId: ModelId): string {
@@ -46,7 +46,7 @@ export async function waitForCloudRun(base: string, id: string, timeoutMs = 600_
   while (Date.now() < deadline) {
     const run = await cloudRequest(base, "GET", `v1/runs/${encodeURIComponent(id)}`) as CloudRunRecord;
     for (const event of (run.events ?? []).slice(seen)) {
-      const label = event.type === "stage" ? event.stage : `${event.trace?.name ?? "tool"}${event.trace?.input?.path ? ` ${event.trace.input.path}` : ""}${event.trace?.input?.program ? ` ${event.trace.input.program}` : ""}`;
+      const label = event.type === "stage" ? event.stage : event.type === "agent_event" ? `${event.event?.type ?? "Agent event"}${event.event?.agent ? ` ${event.event.agent}` : ""}${event.event?.path ? ` ${event.event.path}` : ""}` : `${event.trace?.name ?? "tool"}${event.trace?.input?.path ? ` ${event.trace.input.path}` : ""}${event.trace?.input?.program ? ` ${event.trace.input.program}` : ""}`;
       process.stdout.write(`  ${label ?? "Working"}\n`);
     }
     seen = run.events?.length ?? 0;

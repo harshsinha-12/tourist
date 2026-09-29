@@ -42,13 +42,14 @@ export async function runTeamTask(task: SoloTask): Promise<TeamRun> {
   const memory: TaskMemory = { goal: task.task, decisions: [], filesTouched: [], openQuestions: [], memoryPack: (task.memoryPack ?? []).slice(0, 8) };
   const agents: AgentRole[] = [];
   const usage = { inputTokens: 0, outputTokens: 0 };
-  const runAgent = async (role: Exclude<AgentRole, "supervisor">, instruction = "") => {
+  const runAgent = async (role: Exclude<AgentRole, "supervisor">) => {
     agents.push(role);
+    await task.onEvent?.({ type: "agent.spawned", at: new Date().toISOString(), agent: role });
     const definition = AGENT_ROLES[role];
     const result = await generateText({
       model: chosen.model as LanguageModel,
       providerOptions: chosen.providerOptions,
-      system: `${definition.instructions}\nOnly shared task memory is provided, not another agent's transcript.\n${instruction}`,
+      system: `${definition.instructions}\nOnly shared task memory is provided, not another agent's transcript.`,
       prompt: JSON.stringify(memory),
       tools: aiTools(registry, traces, definition.tools, task.onTool),
       stopWhen: stepCountIs(15),
@@ -68,7 +69,7 @@ export async function runTeamTask(task: SoloTask): Promise<TeamRun> {
   await runAgent("tester");
   let review = await runAgent("reviewer");
   if (review.trim().startsWith("CHANGES_REQUIRED")) {
-    await runAgent("coder", `Address this review exactly once: ${review.slice(0, 500)}`);
+    await runAgent("coder");
     await runAgent("tester");
     review = await runAgent("reviewer");
   }

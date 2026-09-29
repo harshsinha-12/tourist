@@ -6,6 +6,7 @@ export interface TaskMemory {
   filesTouched: string[];
   openQuestions: string[];
   memoryPack: string[];
+  decomposition?: Array<{ goal: string; files: string[] }>;
 }
 
 export const AGENT_ROLES = {
@@ -31,7 +32,8 @@ export const AGENT_ROLES = {
   },
 } as const;
 
-export function chooseTopology(task: string): "solo_coder" | "coder_tester_reviewer" {
+export function chooseTopology(task: string, parts?: readonly { files: readonly string[] }[]): "solo_coder" | "coder_tester_reviewer" | "swarm" {
+  if (parts && parts.length >= 2) return "swarm";
   return /\b(?:bug|fix|race|regression|auth|security|refactor)\b/i.test(task) || task.length > 120
     ? "coder_tester_reviewer"
     : "solo_coder";

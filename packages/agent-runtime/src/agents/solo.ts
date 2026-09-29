@@ -6,6 +6,7 @@ import { DEFAULT_MODEL, type ModelId, type ProviderId } from "../models/config.j
 import { resolveModel, type ModelSelection } from "../models/router.js";
 import { createToolRegistry, type ToolRegistry } from "../tools/registry.js";
 import { checkoutRoot } from "../tools/utils.js";
+import type { TaskMemory } from "./roles.js";
 
 export interface ToolTrace {
   name: string;
@@ -26,6 +27,7 @@ export interface SoloRun {
   usage: { inputTokens: number; outputTokens: number };
   tools: ToolTrace[];
   githubCalls: Array<{ name: string; input: unknown }>;
+  taskMemory: TaskMemory;
 }
 
 export interface SoloTask {
@@ -39,6 +41,19 @@ export interface SoloTask {
   memoryPack?: string[];
   onTool?: (trace: ToolTrace) => void | Promise<void>;
   baseBranch?: string;
+  /** Opt-in decomposition. Each part owns exact checkout-relative files. */
+  swarmParts?: Array<{ goal: string; files: string[]; testHints?: string[] | undefined }>;
+  /** Fixture hook to give each concurrent coder an independent mock model. */
+  partLanguageModels?: LanguageModel[];
+  onEvent?: (event: RunEvent) => void | Promise<void>;
+}
+
+export interface RunEvent {
+  type: "agent.spawned" | "file.changed" | "tool.called" | "test.passed" | "test.failed";
+  at: string;
+  agent?: string;
+  tool?: string;
+  path?: string;
 }
 
 export function summarize(value: unknown): Record<string, unknown> {
@@ -100,21 +115,36 @@ export async function runSoloTask(task: SoloTask): Promise<SoloRun> {
   const id = randomUUID();
   const branch = `tourist/task-${id.slice(0, 12)}`;
   requireSuccess(await invoke("git_branch", { name: branch }), "branch creation");
-  const response = await generateText({
+  const memory: TaskMemory = { goal: task.task, decisions: [], filesTouched: [], openQuestions: [], memoryPack: (task.memoryPack ?? []).slice(0, 8) };
+  await task.onEvent?.({ type: "agent.spawned", at: new Date().toISOString(), agent: "coder" });
+  let response = await generateText({
     model: chosen.model,
     providerOptions: chosen.providerOptions,
     system: CODER_INSTRUCTIONS,
-    prompt: `${task.task}\n\nRelevant scoped memory:\n${JSON.stringify((task.memoryPack ?? []).slice(0, 8))}`,
-    tools: aiTools(registry, traces, CODER_TOOL_IDS, task.onTool),
+    prompt: JSON.stringify(memory),
+    tools: aiTools(registry, traces, [...CODER_TOOL_IDS, "build_tool"], task.onTool),
     stopWhen: stepCountIs(20),
     maxOutputTokens: 2_000,
   });
+  const built = registry.list().filter((definition) => definition.id.startsWith("local_")).map((definition) => definition.id);
+  if (built.length) {
+    memory.decisions.push(`tool_builder: registered ${built.join(", ")}`);
+    const next = await generateText({
+      model: chosen.model, providerOptions: chosen.providerOptions, system: CODER_INSTRUCTIONS,
+      prompt: JSON.stringify(memory),
+      tools: aiTools(registry, traces, [...CODER_TOOL_IDS, ...built], task.onTool),
+      stopWhen: stepCountIs(15), maxOutputTokens: 2_000,
+    });
+    response = next;
+  }
 
   const diff = await invoke("git_diff", {});
   requireSuccess(diff, "git diff");
   const changed = await invoke("git_status", {});
   requireSuccess(changed, "git status");
   if (!changed.stdout.split("\n").slice(1).some((line) => line.trim())) throw new Error("Agent finished without a code change");
+  memory.filesTouched = changed.stdout.split("\n").slice(1).map((line) => line.slice(3).trim()).filter(Boolean);
+  memory.decisions.push(`coder: ${response.text.slice(0, 500)}`);
   const tests = await invoke("run_tests", {});
   requireSuccess(tests, "final tests");
   const commitResult = await invoke("git_commit", { message: `Tourist: ${task.task.trim().slice(0, 100)}` });
@@ -124,6 +154,6 @@ export async function runSoloTask(task: SoloTask): Promise<SoloRun> {
   return {
     id, topology: "solo_coder", agents: ["coder"], modelId: chosen.modelId, provider: chosen.provider, branch,
     summary: response.text, commit, usage: { inputTokens: response.totalUsage.inputTokens ?? 0, outputTokens: response.totalUsage.outputTokens ?? 0 },
-    tools: traces, githubCalls,
+    tools: traces, githubCalls, taskMemory: memory,
   };
 }

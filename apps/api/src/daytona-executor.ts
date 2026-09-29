@@ -4,7 +4,7 @@ import type { Submission } from "./contracts.js";
 import { providerKeyEnv } from "./contracts.js";
 
 export interface ExecutionResult { run: unknown; patch: string }
-export interface CloudEvent { type: "stage" | "tool"; at: string; stage?: string; trace?: unknown }
+export interface CloudEvent { type: "stage" | "tool" | "agent_event"; at: string; stage?: string; trace?: unknown; event?: { type: string; agent?: string; path?: string; tool?: string } }
 export interface CloudExecutor { execute(input: Submission, modelKey: string, onEvent?: (event: CloudEvent) => Promise<void>): Promise<ExecutionResult> }
 
 export class DaytonaExecutor implements CloudExecutor {

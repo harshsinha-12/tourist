@@ -1,6 +1,8 @@
 import { basename, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { DEFAULT_MODEL, getModelConfig, type ModelId, type ReasoningLevel } from "../../agent-runtime/src/models/config.js";
+import { swarmPartsSchema } from "../../agent-runtime/src/agents/swarm.js";
 
 export interface RunOptions {
   repo: string;
@@ -11,6 +13,7 @@ export interface RunOptions {
   output?: string;
   detach: boolean;
   mode: "run" | "plan" | "ask" | "debug";
+  swarmParts?: Array<{ goal: string; files: string[]; testHints?: string[] | undefined }>;
 }
 
 function value(args: string[], key: string): string | undefined {
@@ -31,11 +34,15 @@ export function parseRunOptions(args: string[], mode: RunOptions["mode"] = "run"
   getModelConfig(modelArg);
   if (reasoning && !["low", "medium", "high"].includes(reasoning)) throw new Error("--reasoning must be low, medium, or high");
   const output = value(args, "--output");
+  const partsFile = value(args, "--swarm-parts");
+  if (partsFile && mode !== "run") throw new Error("--swarm-parts requires run mode");
+  const swarmParts = partsFile ? swarmPartsSchema.parse(JSON.parse(readFileSync(resolve(partsFile), "utf8"))) : undefined;
   return {
     repo, task, modelId: modelArg as ModelId,
     ...(reasoning ? { reasoningLevel: reasoning as ReasoningLevel } : {}),
     ...(cloud ? { cloud } : {}),
     ...(output ? { output } : {}),
+    ...(swarmParts ? { swarmParts } : {}),
     detach: args.includes("--detach"), mode,
   };
 }

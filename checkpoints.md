@@ -14,7 +14,7 @@ The city already turns a public GitHub URL into a village. The next work is the 
 3. **Sub-agents** — specialist agents the supervisor can hand work to, one at a time.
 4. **Agent swarm** — several coding agents in parallel, then one integration agent.
 5. **Entire agent architecture** — one runtime that chooses solo, sub-agents, or swarm.
-6. **Memory** — user, codebase, and episodic memory that runtime can retrieve.
+6. **Memory** — user, codebase, and episodic memory, including code rules for a user and for a repo.
 7. **Reinforcement learning** — structured policy learning over trajectories. No model-weight training.
 8. **GitHub functions** — connect an account, read issues, push, and raise pull requests through the tools from stage 1.
 
@@ -32,6 +32,15 @@ Memory has two stores. The **record store** holds the documents. Its shape is fi
 
 `read_memory` returns a bounded pack. The supervisor selects that pack once and places it in shared task memory, so research, coding, testing, review, and integration agents on that run see the same memories. `write_memory` appends one record: the supervisor may write user scope, research and coding agents may write codebase scope, and the finished run writes one episodic record. `delete_memory` is supervisor-only and removes one record by id in user, codebase, or episodic scope. Global rows stay `candidate` until a later graduation gate. Agents do not activate them.
 
+**Code rules** are the taste of the code, and they have two homes.
+
+| Home | Scope | What the agent does |
+| --- | --- | --- |
+| Rule files | Repo, and a separate file for the user | Read them before the first edit on every run. |
+| `code_rule` memory | `user` or `codebase` | Save a rule learned while coding, and read it on the next run. |
+
+Repo files, from the checkout: `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**`. The user file sits with the user, outside any one repo, and applies to every repository they run. `read_code_rules` loads those files, then the saved `code_rule` records for this user and this repo, and puts that pack in shared task memory. A file wins when it disagrees with a memory. The reviewer checks the diff against the pack that was loaded. A learned rule is written with `write_memory` during the run (`scope=user` for taste that follows the person, `scope=codebase` for a convention of that repository). The agent does not rewrite the rule files unless the task asked for that.
+
 ```mermaid
 flowchart TD
   task["Task"] --> policy["Active policy<br/>model · topology · context budget<br/>tool pack · memory pack · stop policy · test policy"]
@@ -40,12 +49,14 @@ flowchart TD
   embedTool --> index["Embedding index<br/>code chunks and memory vectors<br/>engine chosen later"]
   fresh -->|yes| index
   index --> supervisor["Supervisor<br/>picks topology and the next agent<br/>does not edit files"]
+  supervisor --> rules["read_code_rules<br/>repo files: AGENTS.md, CLAUDE.md, .cursor/rules<br/>user taste file, then saved code_rule memories<br/>file wins over memory"]
+  rules --> taskmem["Shared task memory<br/>goal, decisions, files touched, open questions<br/>memory pack and code rules<br/>only channel between agents on this run"]
 
-  supervisor --> memtools["Memory tools<br/>read_memory · write_memory<br/>delete_memory is supervisor-only, one record"]
+  supervisor --> memtools["Memory tools<br/>read_memory · write_memory<br/>delete_memory is supervisor-only, one record<br/>write_memory may store a code_rule mid-run"]
   memtools --> records["Memory records<br/>user · codebase · episodic<br/>global stays candidate"]
   records --> index
 
-  supervisor --> taskmem["Shared task memory<br/>goal, decisions, files touched, open questions, memory pack<br/>only channel between agents on this run"]
+  supervisor --> taskmem
   supervisor --> registry["Tool registry<br/>file, git, test, memory, and embed tools by id"]
   registry --> choice{"Topology"}
 
@@ -55,7 +66,7 @@ flowchart TD
   choice -->|coder_tester_reviewer| research["Research agent<br/>read_file · search<br/>read_memory · write_memory"]
   research --> coder["Coding agent<br/>read_file · write_file · search<br/>shell · git_status · git_diff · git_commit<br/>read_memory · write_memory"]
   coder --> tester["Testing agent<br/>read_file · write_file · search · run_tests<br/>read_memory"]
-  tester --> reviewer["Review agent<br/>read_file · git_diff<br/>read_memory"]
+  tester --> reviewer["Review agent<br/>read_file · git_diff · read_memory<br/>checks the diff against the loaded code rules"]
   reviewer -->|changes required, once| coder
   reviewer -->|accepted| result
 
@@ -121,7 +132,7 @@ Left for later, not part of the AI sequence: private repositories, storing a cit
 | `run_tests` | Runs the fixture’s test command and returns pass or fail. |
 | `git_status` / `git_diff` / `git_commit` | Inspects and commits on a local task branch. |
 | `list_issues`, `get_issue`, `create_pull_request` | Same interface the agent will call later. Adapter records the call only. |
-| `embed_codebase`, `read_memory`, `write_memory`, `delete_memory` | Names and manifests exist. They return “not available yet” until Stage 6. |
+| `embed_codebase`, `read_memory`, `write_memory`, `delete_memory`, `read_code_rules` | Names and manifests exist. They return “not available yet” until Stage 6. |
 
 - [x] Tool manifests and a registry exist. A caller can list tools and invoke one by id.
 - [x] `read_file`, `write_file`, and `search` work on a local fixture repo.
@@ -226,11 +237,11 @@ Testing agent
 One local result branch
 ```
 
-- [ ] Two coding agents can run on disjoint file sets in one sandbox without overwriting each other.
-- [ ] The integration agent merges their branches and runs tests.
-- [ ] A conflict or a failed test returns that part to the owning coder instead of opening a second swarm.
-- [ ] A single-file fixture never starts parallel coders.
-- [ ] **Stage 4 exit:** a fixture task with two independent edits finishes as one tested local branch, and the trace shows the parallel agents and the integration step.
+- [x] Two coding agents can run on disjoint file sets in one sandbox without overwriting each other.
+- [x] The integration agent merges their branches and runs tests.
+- [x] A conflict or a failed test returns that part to the owning coder instead of opening a second swarm.
+- [x] A single-file fixture never starts parallel coders.
+- [x] **Stage 4 exit:** a fixture task with two independent edits finishes as one tested local branch, and the trace shows the parallel agents and the integration step.
 
 ---
 
@@ -242,12 +253,14 @@ One local result branch
 
 Events from the run use the names already sketched for the city (`agent.spawned`, `file.changed`, `tool.called`, `test.passed`, `test.failed`). Delivery events (`branch.pushed`, `pr.created`) stay on the recording adapter.
 
-- [ ] One task entry point can run solo, sub-agents, or swarm, and the run record stores which one ran.
-- [ ] Shared task memory is the only channel between agents.
-- [ ] The tool builder can register one new tool mid-run, and a later step can call it.
-- [ ] A registered tool that fails its own tests is not added to the registry.
-- [ ] The run emits agent, file, tool, and test events with no secrets in the payload.
-- [ ] **Stage 5 exit:** the same entry point completes a small fixture with one agent and a larger fixture with a swarm, and both runs are inspectable from the trajectory and the event list.
+- [x] One task entry point can run solo, sub-agents, or swarm, and the run record stores which one ran.
+- [x] Shared task memory is the only channel between agents.
+- [x] The tool builder can register one new tool mid-run, and a later step can call it.
+- [x] A registered tool that fails its own tests is not added to the registry.
+- [x] The run emits agent, file, tool, and test events with no secrets in the payload.
+- [x] **Stage 5 exit:** the same entry point completes a small fixture with one agent and a larger fixture with a swarm, and both runs are inspectable from the trajectory and the event list.
+
+Evidence (2026-09-29): `swarm.test.ts` runs two coders in separate Git worktrees, merges to one branch, verifies tests and branch cleanup, and exercises both a failed integrated test and a forced merge conflict with one owner correction. `solo.test.ts` and `team.test.ts` cover the other topology choices and event feed. `builder.test.ts` verifies a Zod manifest, failed-fixture rejection, run-scoped registration, and a later model phase invoking the new tool. The swarm is opt-in through a validated disjoint `swarmParts` assignment; ambiguous test ownership stops the run. Cloud and CLI accept that same assignment, but a live Daytona swarm run and hosted browser verification remain open. This is local fixture evidence, not Gate C/D production readiness.
 
 ---
 
@@ -255,14 +268,14 @@ Events from the run use the names already sketched for the city (`agent.spawned`
 
 Start only after the stage 5 exit is checked. Global memory stays off.
 
-**What.** A later task can reuse how the user likes to work, how this repo is built, and what an earlier run tried. The agent retrieves a few relevant memories. It does not load the whole history.
+**What.** A later task can reuse how the user likes to work, how this repo is built, and what an earlier run tried. Code rules are part of that: the agent reads the repo’s rule files and the user’s taste file before editing, and it saves a rule it learns while coding into user or codebase memory. It does not load the whole history.
 
 **How.** Three scopes first (`prd.md` §12). Postgres is the record store and the source of truth. Redis is only hot task state (`prd.md` §13). Vectors for memory records and for code chunks go to an embedding index. The index engine is chosen later. `embed_codebase` fills code chunks for one revision. `read_memory`, `write_memory`, and `delete_memory` are the agent tools from the complete-system diagram. The supervisor puts one memory pack into shared task memory so the other agents on that run read the same notes.
 
 | Scope | Remembers | Written by |
 | --- | --- | --- |
-| User | How this person likes to work (language, test style, size of change). | Explicit notes, or a sanitizer pass over a finished run. |
-| Codebase | Architecture, conventions, fragile areas, prior fixes for one repo. | Notes from finished runs, plus a short index of the fixture. |
+| User | How this person likes to work, including `code_rule` taste that follows them across repos. | The user rule file, explicit notes, or `write_memory` during a run. |
+| Codebase | Architecture, conventions, fragile areas, prior fixes, and `code_rule` records for one repo. | Repo rule files, notes from finished runs, or `write_memory` during a run. |
 | Episodic | One past task: what was tried, what failed, the local result. | The trajectory from stage 5. |
 
 `MemoryProvider` becomes a real retriever: embed the task, fetch a bounded pack of user, codebase, and episodic hits, and pass those ids into the run. The trajectory records which ids were shown to the model. Global memory may be logged as a candidate. Nothing with `scope=global` and `status=active` is readable (`prd.md` §12). Agents cannot promote their own notes.
@@ -274,6 +287,10 @@ Start only after the stage 5 exit is checked. Global memory stays off.
 - [ ] `delete_memory` removes one user, codebase, or episodic record by id. A call cannot clear a whole scope, and it cannot change a global row.
 - [ ] A finished stage 5 run writes an episodic record linked to its trajectory.
 - [ ] Codebase memory can store an architecture note and a convention for one repository.
+- [ ] `read_code_rules` runs before the first edit. It loads `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**` from the repo, plus the user’s taste file, plus saved `code_rule` memories for this user and this repo, and places that pack in shared task memory.
+- [ ] A coding agent can `write_memory` a `code_rule` mid-run: `scope=user` when the taste follows the person, `scope=codebase` when it belongs to that repository.
+- [ ] The next run for that user or that repo loads the saved `code_rule` records. When a rule file and a memory disagree, the file is what the agent follows.
+- [ ] The reviewer checks the diff against the code-rule pack loaded for the run.
 - [ ] User memory can store a preference that applies across that user’s repositories.
 - [ ] The runtime retrieves a bounded memory pack instead of the full table.
 - [ ] The trajectory lists the memory ids inserted into the prompt.

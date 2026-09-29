@@ -7,6 +7,8 @@ export type { SoloTask, SoloRun } from "./agents/solo.js";
 export { AGENT_ROLES, chooseTopology } from "./agents/roles.js";
 export { runTeamTask } from "./agents/team.js";
 export type { TeamRun } from "./agents/team.js";
+export { runSwarmTask, swarmPartsSchema } from "./agents/swarm.js";
+export type { SwarmRun } from "./agents/swarm.js";
 export { runTask } from "./agents/runtime.js";
 export { runAgentRequest } from "./agents/modes.js";
 export type { AgentMode, AgentRequest, ReadOnlyRun } from "./agents/modes.js";
