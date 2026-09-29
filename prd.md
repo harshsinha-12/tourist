@@ -139,10 +139,8 @@ This gives one language across almost the entire product surface.
 
 ## Python
 
-Use Python specifically for:
+The local Stage 1–3 agent runtime is TypeScript, alongside the existing workspace packages. Python remains an option for later:
 
-* LLM orchestration
-* OpenAI Agents SDK
 * reinforcement learning experiments
 * reward computation
 * retrieval/reranking experiments
@@ -150,7 +148,7 @@ Use Python specifically for:
 * agent evaluation
 * ML workflows
 
-OpenAI's current Agents SDK is Python-first and already supports agents, tools, handoffs, guardrails, sessions, tracing and isolated sandbox agents. The SDK uses the Responses API by default.
+The provider-neutral runtime routes model calls to each provider's API while keeping tool execution in Tourist's own registry.
 
 ### Why not Rust?
 
@@ -159,7 +157,7 @@ Rust would make several internal operations faster, but those operations are not
 A typical execution spends time on:
 
 ```text
-OpenAI request          500ms -> several seconds
+Model request           500ms -> several seconds
 Git operations          100ms -> seconds
 npm install             seconds
 Build                   seconds/minutes
@@ -176,22 +174,18 @@ Use Rust later for specific bottlenecks if profiling identifies them.
 
 # 5. Agent Runtime
 
-Use the OpenAI Agents SDK initially.
+The local Stage 1–3 runtime uses a provider-neutral TypeScript AI SDK tool loop. It routes OpenAI, Anthropic, and Gemini models through one agent and tool contract. The runtime remains behind our own interfaces so a later sandbox and persistent worker can replace the local fixture implementation.
 
-It already supports:
+The model adapter supports:
 
 * agents
-* agents as tools
-* handoffs
 * function tools
-* MCP tools
-* sessions
-* guardrails
-* streaming
-* tracing
-* sandbox agents
+* provider-specific reasoning settings
+* bounded multi-step tool calls
+* sequential specialist handoffs through shared task memory
+* redacted local tool traces
 
-These map almost directly to our architecture.
+Streaming, hosted sessions, MCP tools, guardrails, and sandbox agents remain future integrations.
 
 The runtime should still sit behind our own abstraction:
 
@@ -203,20 +197,18 @@ SandboxProvider
 ToolProvider
 ```
 
-That prevents us from coupling the product permanently to OpenAI's SDK.
+That keeps provider routing separate from agent roles, tools, memory, and sandbox work.
 
 For V1:
 
 ```text
-ModelProvider = OpenAI
-AgentRuntime = OpenAI Agents SDK
+ModelProvider = OpenAI | Anthropic | Gemini
+AgentRuntime = provider-neutral AI SDK tool loop
 ```
 
 Later:
 
 ```text
-AnthropicProvider
-GeminiProvider
 OpenRouterProvider
 LocalProvider
 ```
@@ -225,14 +217,14 @@ can be added without rewriting everything.
 
 ---
 
-# 6. Bring Your Own OpenAI Key
+# 6. Bring Your Own Provider Key
 
 For the first release:
 
 ```text
 User
  ↓
-Adds OpenAI API key
+Adds a key for the selected provider
  ↓
 Backend validates key
  ↓

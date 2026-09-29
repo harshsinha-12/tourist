@@ -3,7 +3,7 @@
 > Progress board. Tick a box only when that behavior works in the repo, not when it is designed.
 > `prd.md` is the design reference (agents, tools, memory, learning). `plan.md` is the older gate write-up. **This file is the build order.** Where it disagrees with `plan.md` on sequence, follow this file.
 >
-> Last reviewed: 2026-09-28.
+> Last reviewed: 2026-09-29.
 
 ## How to read this
 
@@ -123,13 +123,13 @@ Left for later, not part of the AI sequence: private repositories, storing a cit
 | `list_issues`, `get_issue`, `create_pull_request` | Same interface the agent will call later. Adapter records the call only. |
 | `embed_codebase`, `read_memory`, `write_memory`, `delete_memory` | Names and manifests exist. They return “not available yet” until Stage 6. |
 
-- [ ] Tool manifests and a registry exist. A caller can list tools and invoke one by id.
-- [ ] `read_file`, `write_file`, and `search` work on a local fixture repo.
-- [ ] `shell` and `run_tests` run only inside that checkout and return structured output.
-- [ ] Local git tools can create a task branch, show a diff, and commit. They cannot push.
-- [ ] GitHub tool names are registered and their adapter records a valid call without using the network.
-- [ ] A new tool can be added by dropping in a manifest plus a function, without changing the agent.
-- [ ] **Stage 1 exit:** a test script, not a model, edits the fixture, runs tests, commits locally, and records a fake pull-request call.
+- [x] Tool manifests and a registry exist. A caller can list tools and invoke one by id.
+- [x] `read_file`, `write_file`, and `search` work on a local fixture repo.
+- [x] `shell` and `run_tests` run only inside that checkout and return structured output.
+- [x] Local git tools can create a task branch, show a diff, and commit. They cannot push.
+- [x] GitHub tool names are registered and their adapter records a valid call without using the network.
+- [x] A new tool can be added by dropping in a manifest plus a function, without changing the agent.
+- [x] **Stage 1 exit:** a test script, not a model, edits the fixture, runs tests, commits locally, and records a fake pull-request call.
 
 ---
 
@@ -140,9 +140,9 @@ Left for later, not part of the AI sequence: private repositories, storing a cit
 **How.** The runtime sits behind our own interfaces (`prd.md` §5) so the product is not welded to one SDK:
 
 ```text
-ModelProvider    = OpenAI, key supplied for this task
-AgentRuntime     = OpenAI Agents SDK
-SandboxProvider  = Daytona, or a local checkout until Daytona is wired
+ModelProvider    = OpenAI, Anthropic, or Gemini, with a task-scoped key
+AgentRuntime     = provider-neutral AI SDK tool loop
+SandboxProvider  = a local fixture checkout until Daytona is wired
 ToolProvider     = the Stage 1 registry
 MemoryProvider   = empty until Stage 6
 ```
@@ -161,12 +161,12 @@ Trajectory (tool calls, diff, test result)
 Recorded create_pull_request call   # not sent to GitHub
 ```
 
-- [ ] A task can be submitted with an OpenAI key. The key does not return to the browser and does not appear in logs or the trajectory.
-- [ ] The solo agent solves a fixture task using only registered tools.
-- [ ] The run ends with a local commit on a task branch and a passing `run_tests` result.
-- [ ] The trajectory lists each tool call and the test outcome.
-- [ ] The agent’s pull-request step hits the recording adapter, not GitHub.
-- [ ] **Stage 2 exit:** one agent, given a fixture task, produces a tested local commit and a complete tool trace.
+- [x] A task can be submitted with an OpenAI key. The key does not return to the browser and does not appear in logs or the trajectory.
+- [x] The solo agent solves a fixture task using only registered tools.
+- [x] The run ends with a local commit on a task branch and a passing `run_tests` result.
+- [x] The trajectory lists each tool call and the test outcome.
+- [x] The agent’s pull-request step hits the recording adapter, not GitHub.
+- [x] **Stage 2 exit:** one agent, given a fixture task, produces a tested local commit and a complete tool trace.
 
 ---
 
@@ -184,13 +184,15 @@ Recorded create_pull_request call   # not sent to GitHub
 | Testing agent | Adds or runs tests. |
 | Review agent | Reads the diff and returns required changes. |
 
-They share a **task memory** object (goal, decisions, files touched, open questions). They do not receive each other’s full chat. The supervisor hands off with the OpenAI Agents SDK handoff or agents-as-tools. The first allowed chain is coder, then tester, then reviewer. A small task still uses the coder alone. The supervisor chooses; it does not always spawn every specialist (`prd.md` §11).
+They share a **task memory** object (goal, decisions, files touched, open questions). They do not receive each other’s full chat. The provider-neutral runtime performs sequential handoffs. The first allowed chain is coder, then tester, then reviewer. A small task still uses the coder alone. The supervisor chooses; it does not always spawn every specialist (`prd.md` §11).
 
-- [ ] Supervisor, research, testing, and review agents exist as separate definitions with separate tool subsets.
-- [ ] A handoff passes the shared task memory, not the full transcript.
-- [ ] A fixture bug runs coder → tester → reviewer, and the reviewer can send the coder back once.
-- [ ] A trivial fixture task runs the coder only, and the trace shows that choice.
-- [ ] **Stage 3 exit:** one task record shows which sub-agents ran, in order, and the final local commit reflects the reviewer’s accepted diff.
+- [x] Supervisor, research, testing, and review agents exist as separate definitions with separate tool subsets.
+- [x] A handoff passes the shared task memory, not the full transcript.
+- [x] A fixture bug runs coder → tester → reviewer, and the reviewer can send the coder back once.
+- [x] A trivial fixture task runs the coder only, and the trace shows that choice.
+- [x] **Stage 3 exit:** one task record shows which sub-agents ran, in order, and the final local commit reflects the reviewer’s accepted diff.
+
+Evidence (2026-09-29): `packages/agent-runtime/test/tools.test.ts` completes the Stage 1 fixture without a model. `solo.test.ts` and `team.test.ts` cover the solo trace, sequential handoff, and one review return. Bounded live OpenAI runs in `solo.live.test.ts` and `team.live.test.ts` each produced a passing fixture commit. Anthropic and Gemini routing is contract-tested but not live-tested without those keys. Local test execution is not an OS sandbox.
 
 ---
 
