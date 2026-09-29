@@ -36,6 +36,9 @@ export interface SoloTask {
   model?: ModelSelection;
   /** For offline contract tests; live runs use resolveModel. */
   languageModel?: LanguageModel;
+  memoryPack?: string[];
+  onTool?: (trace: ToolTrace) => void | Promise<void>;
+  baseBranch?: string;
 }
 
 export function summarize(value: unknown): Record<string, unknown> {
@@ -47,7 +50,7 @@ export function summarize(value: unknown): Record<string, unknown> {
   }));
 }
 
-export function aiTools(registry: ToolRegistry, traces: ToolTrace[], ids: readonly string[] = CODER_TOOL_IDS): ToolSet {
+export function aiTools(registry: ToolRegistry, traces: ToolTrace[], ids: readonly string[] = CODER_TOOL_IDS, onTool?: SoloTask["onTool"]): ToolSet {
   return Object.fromEntries(ids.map((id) => {
     const definition = registry.get(id);
     return [id, tool({
@@ -57,7 +60,9 @@ export function aiTools(registry: ToolRegistry, traces: ToolTrace[], ids: readon
         let result: unknown;
         try { result = await registry.invoke(id, input); }
         catch (error) { result = { error: error instanceof Error ? error.message : "Tool failed" }; }
-        traces.push({ name: id, input: summarize(input), result: summarize(result), at: new Date().toISOString() });
+        const trace = { name: id, input: summarize(input), result: summarize(result), at: new Date().toISOString() };
+        traces.push(trace);
+        await onTool?.(trace);
         return result;
       },
     })];
@@ -69,9 +74,11 @@ export function requireSuccess(result: unknown, action: string): asserts result 
   if (output.exitCode !== 0) throw new Error(`${action} failed: ${output.stderr ?? "unknown error"}`);
 }
 
-export async function invokeTraced(registry: ToolRegistry, traces: ToolTrace[], name: string, input: Record<string, unknown>): Promise<unknown> {
+export async function invokeTraced(registry: ToolRegistry, traces: ToolTrace[], name: string, input: Record<string, unknown>, onTool?: SoloTask["onTool"]): Promise<unknown> {
   const result = await registry.invoke(name, input);
-  traces.push({ name, input: summarize(input), result: summarize(result), at: new Date().toISOString() });
+  const trace = { name, input: summarize(input), result: summarize(result), at: new Date().toISOString() };
+  traces.push(trace);
+  await onTool?.(trace);
   return result;
 }
 
@@ -81,10 +88,11 @@ export async function runSoloTask(task: SoloTask): Promise<SoloRun> {
   const githubCalls: SoloRun["githubCalls"] = [];
   const registry = createToolRegistry(checkout, githubCalls);
   const traces: ToolTrace[] = [];
-  const invoke = (name: string, input: Record<string, unknown>) => invokeTraced(registry, traces, name, input);
+  const invoke = (name: string, input: Record<string, unknown>) => invokeTraced(registry, traces, name, input, task.onTool);
   const status = await invoke("git_status", {});
   requireSuccess(status, "git status");
   if (status.stdout.split("\n").slice(1).some((line) => line.trim())) throw new Error("The checkout must be clean before an agent run");
+  const base = task.baseBranch ?? status.stdout.match(/^## ([^\s.]+)/)?.[1] ?? "main";
 
   const chosen = task.languageModel
     ? { model: task.languageModel, modelId: task.model?.modelId ?? DEFAULT_MODEL, provider: (task.model?.modelId ?? DEFAULT_MODEL).startsWith("claude-") ? "anthropic" as const : (task.model?.modelId ?? DEFAULT_MODEL).startsWith("gemini-") ? "google" as const : "openai" as const, providerOptions: {} }
@@ -96,8 +104,8 @@ export async function runSoloTask(task: SoloTask): Promise<SoloRun> {
     model: chosen.model,
     providerOptions: chosen.providerOptions,
     system: CODER_INSTRUCTIONS,
-    prompt: task.task,
-    tools: aiTools(registry, traces),
+    prompt: `${task.task}\n\nRelevant scoped memory:\n${JSON.stringify((task.memoryPack ?? []).slice(0, 8))}`,
+    tools: aiTools(registry, traces, CODER_TOOL_IDS, task.onTool),
     stopWhen: stepCountIs(20),
     maxOutputTokens: 2_000,
   });
@@ -112,7 +120,7 @@ export async function runSoloTask(task: SoloTask): Promise<SoloRun> {
   const commitResult = await invoke("git_commit", { message: `Tourist: ${task.task.trim().slice(0, 100)}` });
   requireSuccess(commitResult, "local commit");
   const commit = String(commitResult.stdout).match(/\[[^\]]+ ([0-9a-f]+)\]/)?.[1] ?? "";
-  await invoke("create_pull_request", { owner: task.owner, repo: task.repo, head: branch, base: "main", title: task.task.trim().slice(0, 100), body: response.text });
+  await invoke("create_pull_request", { owner: task.owner, repo: task.repo, head: branch, base, title: task.task.trim().slice(0, 100), body: response.text });
   return {
     id, topology: "solo_coder", agents: ["coder"], modelId: chosen.modelId, provider: chosen.provider, branch,
     summary: response.text, commit, usage: { inputTokens: response.totalUsage.inputTokens ?? 0, outputTokens: response.totalUsage.outputTokens ?? 0 },

@@ -493,3 +493,15 @@ button, input { font: inherit; }
   .landing-float { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .landing-float { animation: none; } }
+.agent-terminal { margin: 2rem auto 0; max-width: 900px; overflow: hidden; border: 2px solid #4cb7d2; border-radius: 8px; background: #071d30; color: #f8fbff; box-shadow: 5px 6px 0 #09213566; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.agent-terminal-top { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; background: #0b2b43; color: #b9ceda; font-size: .8rem; }
+.agent-terminal-top > span:first-child { color: #ffd25f; letter-spacing: .25rem; }
+.agent-terminal form { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; padding: 1rem; border-bottom: 1px solid #31596e; }
+.agent-terminal label { display: grid; flex: 1 1 200px; gap: .3rem; color: #b9ceda; font-size: .75rem; }
+.agent-terminal input { min-width: 0; padding: .7rem; border: 1px solid #4cb7d2; border-radius: 3px; background: #0a263c; color: #f8fbff; font: inherit; }
+.agent-terminal button { padding: .7rem 1rem; border: 0; border-radius: 3px; background: #ffd25f; color: #092135; font: inherit; cursor: pointer; }
+.agent-terminal-output { min-height: 180px; max-height: 350px; overflow: auto; padding: 1rem; font-size: .8rem; line-height: 1.55; }
+.agent-terminal-output p { margin: .25rem 0; overflow-wrap: anywhere; }
+.agent-terminal-output time { color: #83a5b3; margin-right: 1rem; }
+.agent-terminal-prompt { color: #71f0c2; margin-right: .6rem; }
+.agent-terminal-error { color: #ffb3a7; }

@@ -194,6 +194,18 @@ They share a **task memory** object (goal, decisions, files touched, open questi
 
 Evidence (2026-09-29): `packages/agent-runtime/test/tools.test.ts` completes the Stage 1 fixture without a model. `solo.test.ts` and `team.test.ts` cover the solo trace, sequential handoff, and one review return. Bounded live OpenAI runs in `solo.live.test.ts` and `team.live.test.ts` each produced a passing fixture commit. Anthropic and Gemini routing is contract-tested but not live-tested without those keys. Local test execution is not an OS sandbox.
 
+Interface work (2026-09-29): `packages/cli` packages the shared runtime as `tourist-agent-cli` with interactive and one-shot run, plan, ask, debug, multi-task, status, model, and memory commands. `apps/api` accepts the same modes and is wired to execute public repositories in disposable Daytona sandboxes, returning patches and a redacted event feed. The landing page embeds a viewer for one cloud run. The npm tarball and local path install ran successfully, a live OpenAI ask command read a disposable fixture, and runtime/API tests plus web build passed. A real Daytona cloud run and browser visual check were not performed. These are interface foundations; Stage 4 swarm integration, Stage 6 Postgres/vector memory, Stage 7 evaluated policy promotion, and Stage 8 GitHub delivery remain unchecked. The local JSON memory store and `reward_v1` logging are functional precursors, not those stage exits.
+
+Interactive terminal check (2026-09-29): the Tourist themed prompt accepted `tourist models` within the session and displayed the configured prices. `/ask What is this repository?` read files in the current uncommitted checkout, showed tool activity, and returned an answer. Coding mode still requires a clean checkout to protect existing work.
+
+Command ribbon check (2026-09-29): the interactive terminal displays a compact horizontal command ribbon. Typing `/` expands the command overview with descriptions; typing filters commands; arrow keys, Tab, and Enter select them. A PTY run selected Plan mode from the ribbon and exited cleanly with Ctrl+C. The ribbon description/filter test passed.
+
+Character suggestion check (2026-09-29): typing `P` in the terminal showed a Plan suggestion and inline completion. Tab filled `/plan`; Enter switched to Plan mode. A normal multiword task returns to the compact ribbon, and the suggestion test passed.
+
+Model picker check (2026-09-29): `models` and `/model` in the interactive terminal open a selectable model table with prices and provider key status. The user can filter by typing, move with arrow keys, adjust supported reasoning levels with left/right, select with Enter, and cancel with Escape. A PTY run selected `gpt-6-luna` and the active header updated. The one-shot `tourist models` remains a printable list.
+
+Model picker refinement (2026-09-29): the 80-column picker displays provider key readiness and reasoning level. A PTY run changed `gpt-6-sol` to low reasoning and the header reflected that selection. `/model <id>` remains a direct shortcut; interactive `models`, `/models`, and `/model` open the picker.
+
 ---
 
 ## Stage 4 — Agent swarm
