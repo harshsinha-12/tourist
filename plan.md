@@ -150,6 +150,8 @@ Discrete decision surface, mandatory trajectories, versioned `reward_v1`, policy
 
 Default deny → sanitize → candidate → multi-repo promote → budgeted retrieve → demote. Agents never write `scope=global, status=active`. Active retrieval off until Gate B.
 
+Code rules are specified on the checkpoint board (Stage 6). Every run reads repo rule files (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/**`) and the user’s taste file before editing. Taste learned while coding is saved as a `code_rule` memory on the user or on that repository, and loaded on the next run. A file wins over a memory.
+
 ---
 
 

@@ -1,0 +1,25 @@
+{
+  "name": "tourist-agent-cli",
+  "version": "0.1.0",
+  "description": "Tourist coding agents for local and cloud runs",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tourist": "./dist/cli.cjs"
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": { "access": "public" },
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepack": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2",
+    "esbuild": "^0.28.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  }
+}

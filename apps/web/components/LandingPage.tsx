@@ -10,6 +10,7 @@ import { EnvironmentSprite } from "./EnvironmentSprite";
 import { LandmarkSprite } from "./LandmarkSprite";
 import { buildingArchetypes } from "./buildings/registry";
 import { cityPath, parseGitHubRepo } from "../lib/github-repo";
+import { AgentRunTerminal } from "./AgentRunTerminal";
 
 const FEATURED = ["typescript", "python", "rust", "ruby", "go", "docker"] as const;
 
@@ -122,6 +123,7 @@ export function LandingPage({ snapshot, localCityHref }: { snapshot: CitySnapsho
           <li><Soon compact /><b>03</b><strong>The plot</strong><span>Builders move to the files they touch. Cranes, test-facility lights, and harbor ships are meant to follow real events — editing, tests, PRs — not a fake screensaver.</span></li>
           <li><Soon compact /><b>04</b><strong>Ship</strong><span>A branch, a review pass, then a GitHub pull request. CI and your comments become the next reward signal, not a discarded chat.</span></li>
         </ol>
+        <AgentRunTerminal />
       </section>
 
       <section className="landing-band" id="memory">

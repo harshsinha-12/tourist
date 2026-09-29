@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+  protobufjs: true
 
 minimumReleaseAgeExclude:
   - zod@4.6.2
