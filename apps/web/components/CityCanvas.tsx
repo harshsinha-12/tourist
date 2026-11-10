@@ -5,7 +5,7 @@ import type { CitySnapshot, Building, Landmark, LandmarkKind } from "@tourist/pr
 import { FileBuilding } from "./buildings/FileBuilding";
 import { EnvironmentSprite, type EnvironmentAsset } from "./EnvironmentSprite";
 import { LandmarkSprite, type CustomLandmarkAsset } from "./LandmarkSprite";
-import { createCityScene, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib/city-scene";
+import { createCityScene, visibleInCamera, zoomAt, MIN_ZOOM, MAX_ZOOM, type Camera } from "../lib/city-scene";
 import { createCityMap } from "../lib/city-map";
 import { CityTraffic } from "./CityTraffic";
 import { CityShips } from "./CityShips";
@@ -101,6 +101,8 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
     return () => node.removeEventListener("wheel", wheel);
   }, [size.height]);
 
+  const cullStructures = snapshot.buildings.length > 48;
+  const onScreen = (x: number, z: number, margin = 280) => !cullStructures || visibleInCamera(scene.project(x, z), camera, size, margin);
   const island = { x: 0, z: 0, width: scene.maxX, depth: scene.maxZ };
   const coastTiles = [
     ...Array.from({ length: Math.ceil(scene.maxX) }, (_, x) => [
@@ -248,15 +250,15 @@ export function CityCanvas({ snapshot, focusedAnchorId, selectedBuildingId, onSe
           </button>
         </div>
         <div className="environment-layer" aria-hidden="true">
-          {map.decorations.map((decoration, index) => <SceneSprite key={`decoration-${index}`} asset={decoration.asset} scene={scene}
+          {map.decorations.filter((decoration) => onScreen(decoration.x, decoration.z, 160)).map((decoration) => <SceneSprite key={`${decoration.asset}-${decoration.x}-${decoration.z}`} asset={decoration.asset} scene={scene}
             x={decoration.x} z={decoration.z} width={decoration.width}
             style={{ zIndex: Math.round((decoration.x + decoration.z) * 10) + 100 }} />)}
-          {trees.map((tree, index) => <SceneSprite key={`tree-${index}`} asset={tree.asset} scene={scene} x={tree.x} z={tree.z} width={Math.round(tree.size * 90)} className="environment-tree" style={{ zIndex: Math.round((tree.x + tree.z) * 10) + 100 }} />)}
+          {trees.filter((tree) => onScreen(tree.x, tree.z, 160)).map((tree) => <SceneSprite key={`${tree.asset}-${tree.x}-${tree.z}`} asset={tree.asset} scene={scene} x={tree.x} z={tree.z} width={Math.round(tree.size * 90)} className="environment-tree" style={{ zIndex: Math.round((tree.x + tree.z) * 10) + 100 }} />)}
         </div>
         <CityClouds scene={scene} />
-        {drawables.map((item) => {
+        {drawables.filter((item) => !("building" in item) || item.id === selectedBuildingId || item.id === focusId || onScreen(item.position.x, item.position.z)).map((item) => {
           const point = scene.targets.get(item.id)!;
-          return <div className={`city-plot ${"landmark" in item ? `city-landmark landmark-${item.landmark.kind}` : ""} ${focusId===item.id ? "is-active" : ""}`} key={item.id} style={{ left: point.x, top: point.y, zIndex: Math.round((item.position.x + item.position.z) * 10) + 100 }}>
+          return <div className={`city-plot ${"landmark" in item ? `city-landmark landmark-${item.landmark.kind}` : ""} ${"building" in item && item.building.fileCount > 1 ? `is-${item.building.settlement}` : ""} ${focusId===item.id ? "is-active" : ""}`} key={item.id} style={{ left: point.x, top: point.y, zIndex: Math.round((item.position.x + item.position.z) * 10) + 100 }}>
             {"building" in item ? <FileBuilding building={item.building} active={item.id===selectedBuildingId || item.id===focusId} onSelect={onSelectBuilding} /> : <button
               type="button"
               className="landmark-action"

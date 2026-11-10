@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { PublicReportSchema, type PublicReport } from "@tourist/protocol";
-import { generateCitySnapshot } from "@tourist/world-generator";
+import { countSnapshotFiles, generateCitySnapshot } from "@tourist/world-generator";
 import { resolveRepositoryRoot, scanLocalRepository } from "./scan-local-repo";
 import { loadGitHubRepositoryReport } from "./github-report";
 
@@ -30,10 +30,14 @@ export const loadLocalRepositoryReport = cache(async (): Promise<PublicReport> =
     },
   });
   const sectors = snapshot.sectors.map((sector) => sector.name).join(", ");
+  const fileCount = countSnapshotFiles(snapshot.buildings);
+  const summary = fileCount === snapshot.buildings.length
+    ? `${fileCount} source files are on the island, grouped into ${snapshot.sectors.length} sectors (${sectors || "root"}). Gitignored paths, images, and generated sprites stay off the map.`
+    : `${fileCount} source files are on the island in ${snapshot.buildings.length} places, grouped into ${snapshot.sectors.length} sectors (${sectors || "root"}). Gitignored paths, images, and generated sprites stay off the map.`;
   return PublicReportSchema.parse({
     id: LOCAL_REPORT_ID,
     title: `${name} as a city`,
-    summary: `${snapshot.buildings.length} source files are on the island, grouped into ${snapshot.sectors.length} sectors (${sectors || "root"}). Gitignored paths, images, and generated sprites stay off the map.`,
+    summary,
     createdAt: new Date().toISOString(),
     snapshot,
     sections: [

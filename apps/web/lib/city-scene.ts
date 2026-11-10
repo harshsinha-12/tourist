@@ -5,6 +5,12 @@ export interface Camera { x: number; y: number; scale: number; }
 export const MIN_ZOOM = 0.025;
 export const MAX_ZOOM = 2;
 
+export function visibleInCamera(point: MapPoint, camera: Camera, viewport: { width: number; height: number }, margin = 0): boolean {
+  const x = camera.x + point.x * camera.scale;
+  const y = camera.y + point.y * camera.scale;
+  return x >= -margin && y >= -margin && x <= viewport.width + margin && y <= viewport.height + margin;
+}
+
 export function zoomAt(camera: Camera, point: MapPoint, requestedScale: number): Camera {
   const scale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requestedScale));
   const ratio = scale / camera.scale;

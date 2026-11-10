@@ -20,6 +20,8 @@ export function TouristShell({ report }: { report: PublicReport }) {
     [selectedBuildingId, snapshot.buildings],
   );
   const activeSection = report.sections.find((section) => section.anchorId === focusedAnchorId);
+  const fileCount = snapshot.buildings.reduce((sum, building) => sum + (building.fileCount ?? 1), 0);
+  const packed = fileCount !== snapshot.buildings.length;
 
   function focusAnchor(anchorId: string) {
     const anchor = snapshot.anchors.find((candidate) => candidate.id === anchorId);
@@ -59,11 +61,11 @@ export function TouristShell({ report }: { report: PublicReport }) {
             <span className="panel-kicker">CITY SCAN · BUILD REPORT</span><span>{reportExpanded ? "−" : "+"}</span>
           </button>
           <h1>{reportExpanded ? report.title : snapshot.repository.name}</h1>
-          <div className="city-census"><strong>{snapshot.buildings.length}</strong><span>FILE BUILDINGS</span><span>{snapshot.layout?.blocks.length ?? snapshot.districts.length} BLOCKS</span></div>
+          <div className="city-census" data-file-count={fileCount} data-structure-count={snapshot.buildings.length}><strong>{fileCount.toLocaleString()}</strong><span>{packed ? "FILES" : "FILE BUILDINGS"}</span><span>{packed ? `${snapshot.buildings.length} PLACES` : `${snapshot.layout?.blocks.length ?? snapshot.districts.length} BLOCKS`}</span></div>
           <div id="report-evidence" hidden={!reportExpanded}>
           <p>{report.summary}</p>
           <div className="report-meta">
-            <span>{snapshot.buildings.length} buildings</span>
+            <span>{packed ? `${fileCount.toLocaleString()} files in ${snapshot.buildings.length} places` : `${snapshot.buildings.length} buildings`}</span>
             <span>{snapshot.sectors.length} sectors</span>
             <span>snapshot v{snapshot.schemaVersion}</span>
           </div>
@@ -132,7 +134,13 @@ function BuildingDetails({ building }: { building: Building }) {
         <div><dt>Purpose</dt><dd>{building.kind}</dd></div>
         <div><dt>Size</dt><dd>{building.linesOfCode.toLocaleString()} LOC</dd></div>
         <div><dt>State</dt><dd className={`state-${building.state}`}>{building.state}</dd></div>
+        {building.fileCount > 1 && <div><dt>Settlement</dt><dd>{building.settlement}</dd></div>}
+        {building.fileCount > 1 && <div><dt>Files</dt><dd>{building.fileCount.toLocaleString()}</dd></div>}
       </dl>
+      {building.members && building.members.length > 0 && <ul className="member-files">
+        {building.members.map((member) => <li key={member.path}><code>{member.path}</code></li>)}
+        {building.fileCount > building.members.length && <li>{building.fileCount - building.members.length} more files share this {building.settlement}.</li>}
+      </ul>}
     </>
   );
 }
