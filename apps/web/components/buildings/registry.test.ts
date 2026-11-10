@@ -26,6 +26,7 @@ describe("building design resolution", () => {
     ["main.c", "C", "c"],
     ["vector.hpp", "C++", "header"],
     ["engine.cpp", "C++", "cpp"],
+    ["stats/model.R", "R", "r"],
   ])("maps %s to %s's design", (path, language, expected) => {
     expect(getBuildingArchetype({ path, language }).design.id).toBe(expected);
   });

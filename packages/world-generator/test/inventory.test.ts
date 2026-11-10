@@ -34,5 +34,6 @@ describe("repository inventory", () => {
     expect(classifyPath("apps/web/lib/city-map.test.ts")).toEqual({ language: "TypeScript", kind: "test" });
     expect(classifyPath("pnpm-lock.yaml")).toEqual({ language: "YAML", kind: "config" });
     expect(classifyPath("LICENSE")).toEqual({ language: "Text", kind: "documentation" });
+    expect(classifyPath("stats/model.R")).toEqual({ language: "R", kind: "source" });
   });
 });

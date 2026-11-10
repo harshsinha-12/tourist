@@ -318,6 +318,13 @@ button, input { font: inherit; }
 .city-plot .file-building { height: 144px; }
 .city-plot .building-name { top: 140px; }
 .city-plot .building-state { top: 163px; }
+.settlement-count { position: absolute; z-index: 3; top: 16px; left: 50%; translate: -50% 0; padding: 2px 6px; color: #17342c; background: #ffe7a4; font-size: 8px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; pointer-events: none; white-space: nowrap; }
+.city-plot.is-town { scale: 1.08; }
+.city-plot.is-city { scale: 1.14; }
+.member-files { max-height: 148px; margin: 10px 0 0; padding: 0; overflow: auto; list-style: none; }
+.member-files li { margin: 0 0 4px; color: #d5ebf2; font-size: 9px; }
+.member-files code { margin: 0; }
+.inspector { max-height: min(52vh, 520px); overflow: auto; }
 .city-landmark { width: 220px; height: 220px; }
 .city-landmark .landmark-sprite { width: 220px; }
 .city-landmark .building-name { top: 210px; font-size: 12px; }

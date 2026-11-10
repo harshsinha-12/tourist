@@ -34,6 +34,8 @@ export const BuildingStateSchema = z.enum([
   "failed",
 ]);
 
+export const SettlementKindSchema = z.enum(["building", "hamlet", "village", "town", "city"]);
+
 export const RepositoryFileSchema = z.object({
   path: z.string().min(1),
   language: z.string().min(1),
@@ -59,6 +61,15 @@ export const DistrictSchema = z.object({
   bounds: BoundsSchema,
 });
 
+export const BuildingMemberSchema = z.object({
+  path: z.string().min(1),
+  name: z.string().min(1),
+  language: z.string().min(1),
+  kind: FileKindSchema,
+  linesOfCode: z.number().int().nonnegative(),
+  state: BuildingStateSchema,
+});
+
 export const BuildingSchema = z.object({
   id: z.string().min(1),
   sectorId: z.string().min(1),
@@ -73,6 +84,10 @@ export const BuildingSchema = z.object({
   footprint: z.object({ width: z.number().positive(), depth: z.number().positive() }),
   height: z.number().positive(),
   color: z.string().regex(/^#[0-9a-f]{6}$/iu),
+  // Older snapshots are one file per building. Packed folders fill these in.
+  settlement: SettlementKindSchema.default("building"),
+  fileCount: z.number().int().positive().default(1),
+  members: z.array(BuildingMemberSchema).optional(),
 });
 
 export const LandmarkKindSchema = z.enum([
@@ -167,6 +182,8 @@ export type Point = z.infer<typeof PointSchema>;
 export type Bounds = z.infer<typeof BoundsSchema>;
 export type FileKind = z.infer<typeof FileKindSchema>;
 export type BuildingState = z.infer<typeof BuildingStateSchema>;
+export type SettlementKind = z.infer<typeof SettlementKindSchema>;
+export type BuildingMember = z.infer<typeof BuildingMemberSchema>;
 export type RepositoryFile = z.infer<typeof RepositoryFileSchema>;
 export type Sector = z.infer<typeof SectorSchema>;
 export type District = z.infer<typeof DistrictSchema>;

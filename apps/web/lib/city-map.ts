@@ -77,10 +77,22 @@ export function createCityMap(snapshot: CitySnapshot) {
     plant(2, offset, .65); plant(width - 2, offset, .65);
   }
   decorations.push({ x: width - 1.3, z: depth - 1.3, asset: "lighthouse", width: 130 });
+  // Claude City caps scattered props so a large island does not plant a sprite
+  // on every spare tile. Parks and the lighthouse stay; the rest are thinned.
+  const keptTrees = spread(trees, 220);
+  const featured = decorations.filter((item) => item.asset === "fountain" || item.asset === "lighthouse");
+  const scatter = spread(decorations.filter((item) => item.asset !== "fountain" && item.asset !== "lighthouse"), 80);
   // Ground-space polygons give both isometric axes identical road widths.
   const roadBounds = ([a, b]: Street, roadWidth = ROAD_WIDTH): Bounds => ({
     x: Math.min(a.x, b.x) - roadWidth / 2, z: Math.min(a.z, b.z) - roadWidth / 2,
     width: Math.abs(b.x - a.x) + roadWidth, depth: Math.abs(b.z - a.z) + roadWidth,
   });
-  return { streets, junctions, blocks, plaza, airbase, trees, decorations, roadBounds };
+  return { streets, junctions, blocks, plaza, airbase, trees: keptTrees, decorations: [...scatter, ...featured], roadBounds };
+}
+
+function spread<T>(items: readonly T[], budget: number): T[] {
+  if (items.length <= budget) return [...items];
+  const kept: T[] = [];
+  for (let index = 0; index < budget; index += 1) kept.push(items[Math.floor(index * items.length / budget)]!);
+  return kept;
 }

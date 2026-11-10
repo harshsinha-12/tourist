@@ -17,7 +17,8 @@ const SKIP_NAMES = new Set(["next-env.d.ts", ".ds_store"]);
 const LANGUAGES: Record<string, string> = {
   ts: "TypeScript", tsx: "TypeScript", mts: "TypeScript", cts: "TypeScript",
   js: "JavaScript", jsx: "JavaScript", mjs: "JavaScript", cjs: "JavaScript",
-  py: "Python", pyi: "Python",
+  py: "Python", pyi: "Python", pyw: "Python",
+  r: "R",
   css: "CSS", scss: "SCSS", sass: "Sass", less: "Less",
   html: "HTML", htm: "HTML",
   json: "JSON", jsonc: "JSON",
