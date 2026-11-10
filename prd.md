@@ -32,11 +32,13 @@ User gives engineering task
           ↓
 Supervisor understands task
           ↓
-Retrieve:
-  User Memory
-  Codebase Memory
-  Global Memory
-  Relevant historical tasks
+Load for this run:
+  rule files, then pins
+  active user dream and active codebase dream
+  recent episode headers
+  Global playbooks only after Gate B
+          ↓
+Agent may read_memory when a fact is not in that pack
           ↓
 Decide agent topology
           ↓
@@ -70,7 +72,13 @@ Human / CI feedback
           ↓
 Reward calculation
           ↓
-Memory + policy update
+Append one episode (immutable)
+          ↓
+Dream job writes the next memory version
+          ↓
+Memory eval activates that version, or keeps the previous one
+          ↓
+Policy update
           ↓
 Future tasks improve
 ```
@@ -617,43 +625,232 @@ Eventually the learning system should determine which topology works best.
 
 # 12. Memory Architecture
 
-Memory is not one vector database.
+Memory is a derived, reviewable state over immutable history. It is not one vector database, and it is not a list of notes the agent appends during a run.
 
-Use distinct scopes.
+This follows the public Dreaming V3 design ([OpenAI, 4 June 2026](https://openai.com/index/chatgpt-memory-dreaming/), [Memory FAQ](https://help.openai.com/en/articles/8590148-memory-in-chatgpt)) and refuses the part of that design that fails in the open literature. Dreaming V3 replaced the 2024 saved-memory list with a background synthesis of past chats, optimized for three things: carry a fact forward after it is said once, follow preferences and constraints, and stay current as time passes ("going to Singapore in July" becomes "went to Singapore in July 2026"). The FAQ is explicit that this synthesis is broader than the summary the user can see, that saved memories stay a separate durable list, and that chat history remains the source you delete when you want something gone.
 
-## User Memory
+Rewriting that synthesis in place is the wrong commit boundary for Tourist. Anthropic's Dreams reads the existing store plus transcripts and writes a new store, leaving the input untouched, so a worse dream can be thrown away. Zhang's May 2026 result (arXiv 2605.12978) is why that matters: an LLM that continuously rewrites its own lessons, with no raw anchor, misgroups episodes, strips the conditions that made a lesson true, and drops below a no-memory baseline. Tourist therefore dreams the way OpenAI describes the product, and commits the way Anthropic commits the artifact.
 
-Persistent across projects.
+Scopes stay. A coding agent that dreams across repositories will leak one customer's conventions into another's. Dreaming runs inside a user or inside one repository. Crossing that wall is still the global graduation pipeline below.
 
-Examples:
+## What a memory has to do
 
-```text
-prefers TypeScript
-uses pnpm
-likes small PRs
-prefers FastAPI
-doesn't like excessive abstraction
-```
+Adapted from Dreaming V3's three evals, plus the constraint those evals do not have:
 
-## Codebase Memory
+1. **Carry context forward.** A convention or decision stated on one task is available on the next task without being restated.
+2. **Follow preferences and constraints.** "Small PRs", "pnpm", "do not add a new framework" change the diff, not just the prose.
+3. **Stay current.** An in-progress migration, a failing test, or a trip-shaped fact is revised when the PR merges, the suite goes green, or the date passes. The original episode keeps the original tense.
+4. **Stay in scope.** A user dream never contains another user's episodes. A codebase dream never contains another repository's private history. Global playbooks never contain secrets, raw diffs, or a single anecdote.
 
-Scoped to a repository.
+The dream is a lossy headline, the way Dreaming's summary is a lossy headline. Pedantic detail stays in the episode and is fetched on demand. A dream that tries to keep every number from every log is the failure mode, not the goal.
 
-Stores:
+## Four layers
 
 ```text
-architecture
-directory meanings
-symbol summaries
-important dependencies
-coding conventions
-historical bugs
-architecture decisions
-old PR discussions
-old agent chats
-previous fixes
-known fragile areas
+Sources          immutable transcripts, diffs, test logs, rule files
+Pins             explicit notes the dream is not allowed to rewrite
+Episodes         one append-only record per finished run
+Dreams           versioned synthesis, one active version per user and per repo
 ```
+
+**Sources** are the source of truth. Object storage holds the transcript and the patch. Deleting a source is what eventually removes a derived claim. Turning memory off does not delete sources.
+
+**Pins** are saved memories. The user asked to remember something, corrected the summary, or the agent saved a `code_rule` that must survive the next dream. A pin is short, addressed to one user or one repository, and editable. The current local store (`~/.tourist/memory.json`) is this layer: explicit notes, keyword retrieval, no synthesis. Dreaming does not edit a pin. A pin can name claims or topics the dream must hide ("don't mention this again" hides; it does not delete the episode).
+
+**Episodes** are the anchor Zhang's result says you cannot throw away. One finished run appends one episode. The dream never rewrites it. A temporary run, an eval run, and a run with memory disabled append nothing and do not enqueue a dream. That is the same rule as a temporary chat: it may read memory if the caller asked it to, and it does not create any.
+
+**Dreams** are the mutable product. Each pass writes a new version. The previous version stays. Only a version that passes the memory eval becomes the one injected into runs.
+
+Precedence when they disagree, highest first:
+
+```text
+rule file in the checkout or the user taste file
+correction pin
+other pin
+active dream claim
+a retrieved episode snippet
+```
+
+A file the agent can open beats a paraphrase of that file. A correction beats a stale dream immediately, on the next run, without waiting for the dream job.
+
+## User memory
+
+One dream per user, plus that user's pins. It holds preferences, constraints, standing instructions, and current work that is not private to one repository.
+
+```text
+prefers small PRs
+uses pnpm unless the repo already uses something else
+do not introduce a new web framework
+currently splitting the billing service (open work; re-date when it lands)
+```
+
+Instructions ("don't bring up the old ORM") are pins or hidden claims, not vibes in the prompt.
+
+## Codebase memory
+
+One dream per repository, plus that repository's pins. This is project-only memory: a run on repo A does not read repo B's dream or episodes. The dream holds architecture, conventions, fragile areas, open work, and decisions. It does not hold the symbol index. Search still hits the code index (§14).
+
+```text
+HTTP handlers validate with zod at the boundary
+auth session migration landed on 2026-10-02; do not restart it
+cache tests flake when the suite shares one Redis
+```
+
+Old chats and old diffs stay as episodes and transcripts. The dream keeps the sentence a later agent can use.
+
+## What a dream version contains
+
+```text
+dream_id
+scope                 # user | codebase
+subject_id            # user id, or repo id
+version               # monotonic
+parent_version        # empty on a rebuild
+mode                  # incremental | rebuild
+status                # candidate | active | rejected | archived
+cursor                # last episode id this version read
+eval_id
+summary               # the review page; partial on purpose
+created_at
+```
+
+Each claim inside it:
+
+```text
+claim_id
+kind                  # preference | constraint | instruction | fact | open_work | decision
+text                  # one or two sentences
+tense                 # current | upcoming | past
+as_of
+valid_until           # optional; the dream must revisit when it passes
+evidence_ids[]        # episode ids and/or pin ids; required
+status                # active | hidden | superseded
+```
+
+A claim with no evidence is rejected before the eval. The summary the user sees is a subset of active claims. Asking "what do you remember about billing?" searches claims and then episodes; it does not pretend the summary was complete.
+
+## The dream job
+
+A worker runs the dream. The agent loop does not. The job is queued when a dream-eligible run finishes, and on a schedule so the clock can re-date facts even when nobody has started a task. It uses a cheap model. Acceptance is not that model's opinion.
+
+Two modes:
+
+```text
+Incremental   previous active dream + episodes after cursor + pins + now + repo events
+Rebuild       episodes + pins + now + repo events, and not the previous dream's prose
+```
+
+Incremental is the default. It is how a single new run updates "migration in progress" after the pull request merges. Rebuild ignores prior dream prose and re-derives from the anchor. Run a rebuild on a schedule, after a prompt or scanner change, and whenever an incremental version has been active for a long stretch. If a rebuild scores within a small margin of the incremental candidate, keep the rebuild. That is the brake on an iterated summary drifting away from what happened.
+
+The job must:
+
+- change tense when time or a repo event supersedes a fact, and point at the episode that justifies the new tense
+- drop claims that no longer help, not only add them; the summary has a token budget
+- respect pins: a hidden topic stays out, a correction overwrites a contradicted claim
+- refuse secrets, raw diffs, and private URLs (same scanners as global memory)
+- leave every previous version on disk
+
+It must not:
+
+- write `scope=global, status=active`
+- read another subject's episodes
+- edit episodes, transcripts, or pins
+- run for a temporary or eval run
+
+## Activation
+
+A candidate becomes the active dream only when the memory eval is not worse than the active version. The first dream for a subject may activate when the citation, scope, and scanner probes pass.
+
+Probes, fixed fixtures plus samples drawn from real episodes:
+
+```text
+carry-forward    a fact stated in an older episode is used, not contradicted
+preference       a pin or claim changes the action (package manager, PR size, framework)
+freshness        a landed change is not described as still open
+citation         every active claim is supported by its evidence ids
+scope            no other repo's private facts, no other user's episodes
+scanners         no secrets, raw source dumps, or private URLs
+```
+
+Failure leaves the previous version active and marks the candidate `rejected`, with the probe names attached. Rollback is selecting the previous active version. User controls on the summary (edit, hide, delete a shown claim) take effect as pins immediately; the next dream has to absorb them.
+
+## What a run actually loads
+
+Huge available memory, tiny active memory. Same rule as code context.
+
+Injected up front, in this order, inside a token budget:
+
+```text
+rule files (AGENTS.md, CLAUDE.md, .cursor/rules/**, user taste file)
+pins for this user and this repo
+active dream summaries (user, then this repo)
+headers of the last few episodes: task, outcome, one line
+```
+
+Not injected up front: the transcript archive, rejected dream versions, hidden claims, other repos, candidate global rows.
+
+`read_memory` is the drill-down. It searches active claims, pins, and episodes for this subject and returns a bounded pack with ids. The agent calls it when the task needs a fact the summary is likely to have dropped. The supervisor may also call it once while assembling the pack. Research, coding, testing, review, and integration agents on that run see the same pack in shared task memory.
+
+A personalization gate may omit the dream body when the task is a mechanical edit fully specified by the ticket and the rule files. Pins and rule files still load. The trajectory records `dream_id` and version, the claim ids, and the episode ids that were shown. Retrieval credit attaches to those ids, not to "memory" in the abstract.
+
+## Episode and pin shapes
+
+Episode, append-only:
+
+```text
+episode_id
+user_id
+repo_id
+trajectory_id
+task
+outcome               # succeeded | failed | partial
+tried                 # short
+failed                # short, empty if nothing failed
+landed                # a commit or PR exists
+transcript_ref
+dream_eligible        # false for temporary and eval runs
+created_at
+```
+
+Pin:
+
+```text
+pin_id
+scope                 # user | codebase
+repo_id               # empty for user scope
+kind                  # code_rule | preference | instruction | correction
+text
+hides[]               # claim ids or topics excluded from injection
+status                # active | deleted
+source                # user | agent | file
+created_at
+```
+
+`write_memory` writes one pin. It does not write a dream claim. The supervisor may pin user scope. Research and coding agents may pin a codebase `code_rule` when the run learned a convention of that repo, or a user `code_rule` when the taste follows the person. `delete_memory` deletes one pin or hides one claim. It cannot clear a scope, rewrite an episode, or change a global row. Deleting the underlying episode is a retention action on the transcript, not an agent tool. Claims whose only evidence was deleted are quarantined until the next dream, which must drop them.
+
+## Working memory
+
+The current task's scratchpad: goal, files, hypotheses. It dies with the run. The episode is the only piece that survives, and only as a summary plus a pointer to the transcript.
+
+## Procedural memory
+
+A repo-local playbook ("for Prisma drift in this repo, diff the schema before rewriting SQL") is a codebase claim or a pin. A playbook that has already been generalized and evidenced on more than one repository may be proposed as a global candidate. There is no third store, and a dream cannot activate it.
+
+## Shared task memory
+
+The only channel between agents on one run: goal, decisions, files touched, open questions, the memory pack, and the code-rule pack. It is not a dream input except through the episode written at the end.
+
+## Review, correction, deletion
+
+The product shows the active summary, with an "updated" time, and says it is not everything memory can use. From that surface a person can:
+
+- correct a line, which writes a correction pin and wins on the next run
+- hide a topic, which stops injection and does not delete the episode
+- delete a pin, which stops that pin immediately
+- delete an episode's transcript, which quarantines claims that cited only it
+- turn dreaming off and keep pins, or turn memory off entirely
+
+Turning dreaming off does not delete episodes. Turning memory off stops injection and stops new dreams. Sources remain until they are deleted themselves. Propagation is allowed to be asynchronous; a pin or a hide is the path that is synchronous.
 
 ## Global Memory
 
@@ -668,7 +865,7 @@ general engineering knowledge
 anti-patterns that repeatedly fail
 ```
 
-Global Memory is **not** a dump of successful run notes. It is a **graduated, sanitized, evidence-backed** store. Nothing enters Global Memory without passing the promotion pipeline defined below and in §21.
+Global Memory is **not** a dream, and it is **not** a dump of successful run notes. A dream may propose a candidate when a claim is already abstract. Only the graduation pipeline below, and in §21, can activate it. User and codebase dreams never read the global store in order to write themselves.
 
 **Default posture: reject.** Candidates start denied. Promotion is earned.
 
@@ -684,21 +881,21 @@ anti_pattern      e.g. full agent swarm for ≤50 LOC bugfixes wastes cost
 ### What must never become Global Memory
 
 ```text
-user preferences          → User Memory
-repo-specific architecture → Codebase Memory
-raw diffs / customer code  → never
+user preferences          → user pins or the user dream
+repo-specific architecture → codebase pins or the codebase dream
+raw diffs / customer code  → transcripts only, never a dream or a global row
 secrets, PII, private URLs → never
-single-run anecdotes       → stay Episodic until evidence accumulates
+single-run anecdotes       → the episode; no promotion until evidence accumulates
 ```
 
-### Memory record shape (all scopes)
+### Global record shape
 
-Every memory row should carry:
+Pins, episodes, and dream claims have their own shapes above. A global row carries:
 
 ```text
 memory_id
-scope                # user | codebase | global | episodic | procedural
-type                 # strategy | tool_pattern | debug_playbook | anti_pattern | convention | decision | ...
+scope                # global
+type                 # strategy | tool_pattern | debug_playbook | anti_pattern
 content              # short, actionable text
 content_hash         # hash of normalized content (dedupe)
 abstraction_score    # 0..1 how repo-agnostic the text is
@@ -743,9 +940,9 @@ STEP 2 — Scope classifier (LLM ok, but output enum only)
     global_strategy
     garbage / too_vague
   route:
-    user_preference     → User Memory path (never global)
-    repo_specific_fact  → Codebase Memory path (never global)
-    episodic_anecdote   → stay episodic (no promote yet)
+    user_preference     → user pin or user dream (never global)
+    repo_specific_fact  → codebase pin or codebase dream (never global)
+    episodic_anecdote   → stay an episode (no promote yet)
     garbage             → REJECT
     global_strategy     → continue
 
@@ -763,7 +960,7 @@ STEP 3 — Generalization rewrite (LLM ok)
     + presence of WHEN/DO structure
     + absence of proper nouns / paths
     + cross-language generality where claimed
-  if abstraction_score < 0.7 → REJECT for global (may keep as codebase/episodic)
+  if abstraction_score < 0.7 → REJECT for global (the episode stays; a codebase dream may still say it)
 
 STEP 4 — Dedup + contradiction
   embed sanitized content
@@ -860,42 +1057,17 @@ IF stronger contradictory memory is promoted:
 ### Anti-pollution invariants
 
 ```text
-1. Agents cannot write directly to Global Memory.
+1. Agents cannot write directly to Global Memory, and a dream cannot activate it.
 2. Only the graduation service can set scope=global AND status=active.
 3. Every active global memory has ≥ 2 repo evidence ids.
-4. Every retrieval is attributable on a trajectory.
+4. Every retrieval is attributable on a trajectory, including the dream version id.
 5. Archived memories are never silently reactivated without re-running promotion.
 6. Re-sanitize periodically; if scanners improve, re-scan actives and demote failures.
+7. Episodes and transcripts are append-only. A dream writes a new version and leaves the previous one.
+8. A dream version that fails the memory eval does not replace the active version.
+9. Pins are not rewritten by the dream. Rule files beat pins. Pins beat dream claims.
+10. A codebase dream for repo A is not readable from a run on repo B.
 ```
-
-## Episodic Memory
-
-What happened.
-
-```text
-Task #351
-attempt 1 failed
-attempt 2 changed auth middleware
-tests failed due to cache
-third approach passed
-user accepted PR
-```
-
-## Working Memory
-
-Short-lived current-task context.
-
-## Procedural / Tool Memory
-
-How to perform capabilities.
-
-```text
-"When analysing Prisma migration drift, use schema-diff-tool."
-```
-
-## Shared Task Memory
-
-Allows agents working on the same task to exchange discoveries.
 
 ---
 
@@ -915,6 +1087,10 @@ tasks
 agents
 runs
 memory metadata
+pins
+episodes
+dream versions and claims
+dream cursors
 tool metadata
 PRs
 feedback
@@ -933,12 +1109,13 @@ Use for:
 
 ```text
 code summaries
-old chats
-decisions
-memory records
+episode and dream-claim embeddings, for drill-down
+global rows after Gate B
 task trajectories
 tool descriptions
 documentation
+
+The active dream summary is a document, not a vector hit. Inject that document. Use Qdrant when `read_memory` has to find an episode the summary dropped.
 ```
 
 Qdrant supports dense + sparse hybrid retrieval and multi-stage reranking.
@@ -962,6 +1139,7 @@ active agents
 locks
 rate limits
 cached retrieval
+active dream summary per user and per repo
 temporary task state
 presence
 WebSocket state
@@ -1015,7 +1193,9 @@ Summarization
       ↓
 Embeddings
       ↓
-Codebase Memory
+Code index (chunks for search)
+
+The codebase dream is not this index. It is a short synthesis of runs, decisions, and conventions for one repository (§12). Search hits stay in the index.
 ```
 
 Store relationships like:
@@ -1193,7 +1373,7 @@ over vague claims that “the agent does reinforcement learning.”
 3. **Every completed run must produce a trajectory + reward.** Incomplete learning records are treated as system bugs.
 4. **Only discrete, versioned decisions are learned.** Free-form “policy updates” are forbidden.
 5. **No policy promotion without an eval gate.** Logging alone is not learning.
-6. **Global Memory graduates under rules**, not vibes.
+6. **Dreams activate under a memory eval. Global Memory graduates under rules.** Neither is a vibe.
 
 ## What the system actually learns
 
@@ -1497,14 +1677,20 @@ No eval harness → no RL marketing claims; only analytics.
 
 ## Global Memory graduation pipeline
 
-The full sanitization, promotion, retrieval, demotion, and anti-pollution invariants live in **§12 Global Memory**.
+The full sanitization, promotion, retrieval, demotion, and anti-pollution invariants live in **§12**. Dream activation is a separate gate from this pipeline: a user or codebase dream becomes active by winning the memory eval against the previous version, and that does not promote anything to global.
 
 Operational summary:
 
 ```text
-Episodic / procedural outcomes
+Append-only episodes
         ↓
-Candidate extractor (cheap model) — proposes only
+Dream job (incremental or rebuild) — proposes the next version only
+        ↓
+Memory eval (carry-forward, preference, freshness, citation, scope, scanners)
+        ↓
+Active user dream or active codebase dream — previous version kept
+        ↓
+A claim that is already abstract may be copied out as a global candidate
         ↓
 Deterministic sanitizer (scanners → scope → generalize → dedupe)
         ↓
@@ -1530,12 +1716,14 @@ Execute run
         ↓
 Outcome + reward_v1
         ↓
-Label useful_memories / useful_tools / useful_files
+Append one episode when the run is dream-eligible
+        ↓
+Label useful claims, episodes, tools, and files
         ↓
 Update:
   1) bandit arms for decision keys
-  2) retrieval scores
-  3) memory confidence, promotion, demotion
+  2) retrieval scores on the ids that were shown
+  3) the next dream's keep/drop choices, and global confidence / promotion / demotion
 ```
 
 This is the operational definition of self-improvement for Tourist:
@@ -2565,10 +2753,10 @@ Add:
 ```text
 repo indexing (Tree-sitter, hybrid search)
 Context Engine (discover, don't dump)
-user memory
-codebase memory
-episodic memory
-old task retrieval
+pins (explicit notes and code rules)
+append-only episodes
+versioned user and codebase dreams, activated by the memory eval
+old task retrieval through read_memory
 richer city layout from index (symbols / importance → building prominence)
 ```
 
@@ -2576,13 +2764,15 @@ Global Memory extractor may invent **candidates**, but **promotion stays off** u
 
 ## Gate B — Memory Safety
 
-Before any active Global Memory retrieval in production:
+Before any active Global Memory retrieval in production, and before a dream version can replace the one a run loads:
 
 ```text
-sanitizer scanners live
+sanitizer scanners live on dreams and on global candidates
 scope classifier routes correctly on a labeled test set
+dream eval covers carry-forward, preference, freshness, citation, and scope
+a failed dream eval keeps the previous version
 promotion job enforces multi-traj + multi-repo gates
-retrieval budget + attribution on trajectories
+retrieval budget + attribution on trajectories, including dream version id
 demotion path tested
 ```
 
@@ -2665,7 +2855,7 @@ Later, after Gates A–B:
 useful_* credit assignment
 eval harness as release gate
 contextual bandits behind promotion gates
-global memory graduation (§12)
+dream activation and global memory graduation (§12)
 shadow → canary → active policy versions with rollback
 ```
 

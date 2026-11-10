@@ -592,6 +592,21 @@ For your design, I'd go one step beyond Cursor and make **context selection itse
 
 Counter-question: say a task needs one 2,000-token file and there are ten semantically related 2,000-token files. Would you initially send all 20k tokens, or send the highest-ranked file and let the agent pull the others only if it needs them?
 
+---
+
+## Memory, after Dreaming V3
+
+The "do not insert memory up front" line above is about the archive. It is not a reason to start every task with no memory at all.
+
+OpenAI's Dreaming V3 (June 2026) keeps a background synthesis of past chats so the next conversation can carry a fact forward, follow a preference, and drop a fact that time has outdated. Their own FAQ says that summary is partial, saved memories stay a separate durable list, and chat history is what you delete. Anthropic's Dreams writes a new store and leaves the input store untouched. Zhang (arXiv 2605.12978) shows why the second choice matters: an LLM that rewrites its own lessons in place, with no raw episodes left, gets worse than no memory.
+
+`prd.md` §12 is the resolution used here:
+
+- Inject rule files, pins, and the short active dream. That is the "critical rules" slot, and it stays small.
+- Keep episodes immutable. The dream writes a new version. A failed memory eval keeps the previous version.
+- Let `read_memory` pull an episode when the summary dropped the detail. That is the tool-driven half of this note.
+- Do not dream across repositories. Global playbooks still graduate under Gate B.
+
 [1]: https://cursor.com/blog/dynamic-context-discovery?utm_source=chatgpt.com "Dynamic context discovery · Cursor"
 [2]: https://cursor.com/blog/continually-improving-agent-harness?utm_source=chatgpt.com "Continually improving our agent harness · Cursor"
 [3]: https://prod.cursor.com/blog/semsearch?utm_source=chatgpt.com "Improving agent with semantic search · Cursor"

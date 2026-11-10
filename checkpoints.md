@@ -3,7 +3,7 @@
 > Progress board. Tick a box only when that behavior works in the repo, not when it is designed.
 > `prd.md` is the design reference (agents, tools, memory, learning). `plan.md` is the older gate write-up. **This file is the build order.** Where it disagrees with `plan.md` on sequence, follow this file.
 >
-> Last reviewed: 2026-09-29.
+> Last reviewed: 2026-11-10. Memory now follows `prd.md` §12: pins, append-only episodes, and versioned dreams.
 
 ## How to read this
 
@@ -14,7 +14,7 @@ The city already turns a public GitHub URL into a village. The next work is the 
 3. **Sub-agents** — specialist agents the supervisor can hand work to, one at a time.
 4. **Agent swarm** — several coding agents in parallel, then one integration agent.
 5. **Entire agent architecture** — one runtime that chooses solo, sub-agents, or swarm.
-6. **Memory** — user, codebase, and episodic memory, including code rules for a user and for a repo.
+6. **Memory** — pins, append-only episodes, and a versioned dream per user and per repo, including code rules. Global memory stays off.
 7. **Reinforcement learning** — structured policy learning over trajectories. No model-weight training.
 8. **GitHub functions** — connect an account, read issues, push, and raise pull requests through the tools from stage 1.
 
@@ -24,22 +24,26 @@ Do not start a stage until the previous stage’s exit box is checked. Through s
 
 One top-to-bottom flow. The supervisor reads the active policy, indexes the repo when the revision has no embeddings, loads a memory pack for every agent on the run, then picks solo, sub-agents, or a swarm. After the run, the trajectory is scored and that score is what the next task’s policy is allowed to learn from.
 
-Memory has two stores. The **record store** holds the documents. Its shape is fixed now. The **embedding index** holds vectors for those records and for code chunks. Which vector database runs that index is chosen later. Both stores use the same fields below.
+Memory has four layers (`prd.md` §12). **Sources** are the transcript and the patch. **Pins** are explicit notes the dream cannot rewrite. **Episodes** are append-only, one per finished run. **Dreams** are a versioned synthesis, one active version per user and one per repository. The **embedding index** holds vectors for episodes, dream claims, and code chunks so `read_memory` can drill into a fact the summary dropped. Which vector database runs that index is chosen later.
 
-**Memory record:** `id`, `scope` (`user` | `codebase` | `episodic` | `global`), `status` (`candidate` | `active` | `archived`), `repo id` (empty for user scope), `body`, `source trajectory id`, `embedding ref`.
+**Pin:** `id`, `scope` (`user` | `codebase`), `kind` (`code_rule` | `preference` | `instruction` | `correction`), `repo id` (empty for user scope), `text`, `hides`, `status` (`active` | `deleted`).
 
-**Code chunk:** `repo id`, `revision`, `path`, `span`, `text`, `embedding ref`.
+**Episode:** `id`, `user id`, `repo id`, `trajectory id`, `task`, `outcome`, `tried`, `failed`, `landed`, `transcript ref`, `dream eligible`, `created at`. Episodes are not edited.
 
-`read_memory` returns a bounded pack. The supervisor selects that pack once and places it in shared task memory, so research, coding, testing, review, and integration agents on that run see the same memories. `write_memory` appends one record: the supervisor may write user scope, research and coding agents may write codebase scope, and the finished run writes one episodic record. `delete_memory` is supervisor-only and removes one record by id in user, codebase, or episodic scope. Global rows stay `candidate` until a later graduation gate. Agents do not activate them.
+**Dream version:** `id`, `scope` (`user` | `codebase`), `subject id`, `version`, `parent version`, `mode` (`incremental` | `rebuild`), `status` (`candidate` | `active` | `rejected` | `archived`), `cursor`, `eval id`, `summary`. Claims inside it carry `kind`, `text`, `tense` (`current` | `upcoming` | `past`), `as of`, `evidence ids`, and `status` (`active` | `hidden` | `superseded`).
+
+**Code chunk:** `repo id`, `revision`, `path`, `span`, `text`, `embedding ref`. The code index is not the codebase dream.
+
+`read_memory` returns a bounded pack: rule files, pins, the active dream summaries, and recent episode headers. The supervisor selects that pack once and places it in shared task memory, so research, coding, testing, review, and integration agents on that run see the same memories. The same tool can search episodes when the summary is not enough. `write_memory` writes one pin: the supervisor may pin user scope, and research and coding agents may pin a codebase or user `code_rule`. It does not write a dream claim. `delete_memory` removes one pin or hides one claim. It cannot clear a scope, rewrite an episode, or change a global row. A finished dream-eligible run appends one episode, then a worker writes the next dream version. That version is injected only if the memory eval is not worse than the active one. Global rows stay `candidate` until a later graduation gate. Agents and dreams do not activate them.
 
 **Code rules** are the taste of the code, and they have two homes.
 
 | Home | Scope | What the agent does |
 | --- | --- | --- |
 | Rule files | Repo, and a separate file for the user | Read them before the first edit on every run. |
-| `code_rule` memory | `user` or `codebase` | Save a rule learned while coding, and read it on the next run. |
+| `code_rule` pin | `user` or `codebase` | Save a rule learned while coding. A dream may mention it and must not rewrite it. |
 
-Repo files, from the checkout: `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**`. The user file sits with the user, outside any one repo, and applies to every repository they run. `read_code_rules` loads those files, then the saved `code_rule` records for this user and this repo, and puts that pack in shared task memory. A file wins when it disagrees with a memory. The reviewer checks the diff against the pack that was loaded. A learned rule is written with `write_memory` during the run (`scope=user` for taste that follows the person, `scope=codebase` for a convention of that repository). The agent does not rewrite the rule files unless the task asked for that.
+Repo files, from the checkout: `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**`. The user file sits with the user, outside any one repo, and applies to every repository they run. `read_code_rules` loads those files, then the saved `code_rule` pins for this user and this repo, and puts that pack in shared task memory. A file wins over a pin, and a pin wins over a dream claim. The reviewer checks the diff against the pack that was loaded. A learned rule is written with `write_memory` during the run (`scope=user` for taste that follows the person, `scope=codebase` for a convention of that repository). The agent does not rewrite the rule files unless the task asked for that.
 
 ```mermaid
 flowchart TD
@@ -49,12 +53,14 @@ flowchart TD
   embedTool --> index["Embedding index<br/>code chunks and memory vectors<br/>engine chosen later"]
   fresh -->|yes| index
   index --> supervisor["Supervisor<br/>picks topology and the next agent<br/>does not edit files"]
-  supervisor --> rules["read_code_rules<br/>repo files: AGENTS.md, CLAUDE.md, .cursor/rules<br/>user taste file, then saved code_rule memories<br/>file wins over memory"]
+  supervisor --> rules["read_code_rules<br/>repo files: AGENTS.md, CLAUDE.md, .cursor/rules<br/>user taste file, then code_rule pins<br/>file wins over pin, pin wins over dream"]
   rules --> taskmem["Shared task memory<br/>goal, decisions, files touched, open questions<br/>memory pack and code rules<br/>only channel between agents on this run"]
 
-  supervisor --> memtools["Memory tools<br/>read_memory · write_memory<br/>delete_memory is supervisor-only, one record<br/>write_memory may store a code_rule mid-run"]
-  memtools --> records["Memory records<br/>user · codebase · episodic<br/>global stays candidate"]
-  records --> index
+  supervisor --> memtools["Memory tools<br/>read_memory · write_memory<br/>delete_memory removes one pin or hides one claim<br/>write_memory stores a pin, including a code_rule"]
+  memtools --> pins["Pins<br/>user · codebase<br/>dream cannot rewrite"]
+  memtools --> dreams["Active dreams<br/>one user version, one repo version"]
+  pins --> index
+  dreams --> index
 
   supervisor --> taskmem
   supervisor --> registry["Tool registry<br/>file, git, test, memory, and embed tools by id"]
@@ -83,10 +89,11 @@ flowchart TD
 
   result["Local result branch"] --> trace["Trajectory and events<br/>decisions, tool calls, memory ids shown to the model<br/>agent.spawned · file.changed · tool.called · test.passed · test.failed"]
   trace --> reward["reward_v1<br/>tests · diff · tokens · latency"]
-  reward --> episodic["write_memory<br/>one episodic record for this run"]
-  episodic --> records
-  reward --> credit["Retrieval credit<br/>raises or lowers rank of memory ids that were in the prompt"]
-  credit --> records
+  reward --> episode["Append one episode<br/>transcript stays immutable"]
+  episode --> dreamjob["Dream job<br/>new version, previous kept<br/>eval must not be worse"]
+  dreamjob --> dreams
+  reward --> credit["Retrieval credit<br/>raises or lowers rank of claim and episode ids shown"]
+  credit --> dreams
   reward --> eval["Eval harness<br/>success, latency, tokens on fixture tasks"]
   eval --> gate{"Beats the current default<br/>at equal or lower cost?"}
   gate -->|no| shadow["Shadow<br/>choice is logged, live behavior stays"]
@@ -266,37 +273,42 @@ Evidence (2026-09-29): `swarm.test.ts` runs two coders in separate Git worktrees
 
 ## Stage 6 — Memory
 
-Start only after the stage 5 exit is checked. Global memory stays off.
+Start only after the stage 5 exit is checked. Global memory stays off. The local JSON note file remains the pin store until Postgres exists. It is not the dream.
 
-**What.** A later task can reuse how the user likes to work, how this repo is built, and what an earlier run tried. Code rules are part of that: the agent reads the repo’s rule files and the user’s taste file before editing, and it saves a rule it learns while coding into user or codebase memory. It does not load the whole history.
+**What.** A later task can reuse how the user likes to work, how this repo is built, and what an earlier run tried, without loading the transcript archive. Code rules stay explicit: the agent reads rule files and pins before editing, and a rule it learns is a pin. A background dream keeps the short, current summary. The dream does not rewrite pins or episodes, and a new dream version is used only when the memory eval is not worse than the current one.
 
-**How.** Three scopes first (`prd.md` §12). Postgres is the record store and the source of truth. Redis is only hot task state (`prd.md` §13). Vectors for memory records and for code chunks go to an embedding index. The index engine is chosen later. `embed_codebase` fills code chunks for one revision. `read_memory`, `write_memory`, and `delete_memory` are the agent tools from the complete-system diagram. The supervisor puts one memory pack into shared task memory so the other agents on that run read the same notes.
+**How.** Follow `prd.md` §12. Postgres holds pins, episodes, and dream versions. Redis caches the active dream summary per user and per repo (`prd.md` §13). Vectors for episodes, claims, and code chunks go to an embedding index. The index engine is chosen later. `embed_codebase` fills code chunks for one revision and does not write the codebase dream. `read_memory`, `write_memory`, and `delete_memory` are the agent tools from the complete-system diagram. The supervisor puts one memory pack into shared task memory so the other agents on that run read the same notes.
 
-| Scope | Remembers | Written by |
+| Layer | Remembers | Written by |
 | --- | --- | --- |
-| User | How this person likes to work, including `code_rule` taste that follows them across repos. | The user rule file, explicit notes, or `write_memory` during a run. |
-| Codebase | Architecture, conventions, fragile areas, prior fixes, and `code_rule` records for one repo. | Repo rule files, notes from finished runs, or `write_memory` during a run. |
-| Episodic | One past task: what was tried, what failed, the local result. | The trajectory from stage 5. |
+| Pin | A preference, instruction, correction, or `code_rule` that must survive the next dream. | The user, or `write_memory` during a run. Rule files are not pins; they are read from disk. |
+| Episode | One past task: what was tried, what failed, whether it landed. | The finished run, once, append-only. |
+| Dream | The current summary for one user, or for one repo: facts, open work, and decisions, with tense. | The dream worker, after the run or on the clock. Not the agent. |
 
-`MemoryProvider` becomes a real retriever: embed the task, fetch a bounded pack of user, codebase, and episodic hits, and pass those ids into the run. The trajectory records which ids were shown to the model. Global memory may be logged as a candidate. Nothing with `scope=global` and `status=active` is readable (`prd.md` §12). Agents cannot promote their own notes.
+`MemoryProvider` loads rule files, pins, the active dream summaries, and recent episode headers. It does not load every episode. The trajectory records the dream version and the claim and episode ids shown to the model. A temporary or eval run does not append an episode and does not enqueue a dream. Global memory may be logged as a candidate. Nothing with `scope=global` and `status=active` is readable. Agents cannot promote their own notes, and a dream cannot either.
 
-- [ ] Postgres stores user, codebase, and episodic records with the record shape in the complete-system diagram.
-- [ ] `embed_codebase` writes code chunks for one repo revision into the embedding index.
-- [ ] `read_memory` returns a bounded pack. Research, coding, testing, review, and integration agents can call it.
-- [ ] `write_memory` appends one user record from the supervisor, or one codebase record from a research or coding agent.
-- [ ] `delete_memory` removes one user, codebase, or episodic record by id. A call cannot clear a whole scope, and it cannot change a global row.
-- [ ] A finished stage 5 run writes an episodic record linked to its trajectory.
-- [ ] Codebase memory can store an architecture note and a convention for one repository.
-- [ ] `read_code_rules` runs before the first edit. It loads `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**` from the repo, plus the user’s taste file, plus saved `code_rule` memories for this user and this repo, and places that pack in shared task memory.
-- [ ] A coding agent can `write_memory` a `code_rule` mid-run: `scope=user` when the taste follows the person, `scope=codebase` when it belongs to that repository.
-- [ ] The next run for that user or that repo loads the saved `code_rule` records. When a rule file and a memory disagree, the file is what the agent follows.
+- [ ] Postgres stores pins, episodes, and dream versions with the shapes in the complete-system diagram.
+- [ ] `embed_codebase` writes code chunks for one repo revision into the embedding index and does not write a dream.
+- [ ] `read_memory` returns a bounded pack of pins, the active user dream, the active dream for this repo, and recent episode headers. Research, coding, testing, review, and integration agents can call it.
+- [ ] `read_memory` can search episodes for this user and this repo when the summary does not contain the fact.
+- [ ] `write_memory` writes one pin. The supervisor may pin user scope. A research or coding agent may pin a `code_rule`.
+- [ ] `delete_memory` deletes one pin or hides one claim. A call cannot clear a scope, rewrite an episode, or change a global row.
+- [ ] A finished dream-eligible run appends one episode linked to its trajectory. A temporary or eval run appends nothing.
+- [ ] The dream worker writes a new user version and a new repo version from the new episode, the previous dream, pins, and the clock. The previous version remains stored.
+- [ ] A rebuild dream, which does not read the previous dream's prose, can be compared with the incremental dream.
+- [ ] The new version becomes active only when the memory eval is not worse: carry-forward, preference, freshness, every claim cites evidence, and a repo dream contains nothing from another repo.
+- [ ] A failed eval leaves the previous dream active.
+- [ ] A correction pin beats a contradicted dream claim on the next run, before the dream job has caught up.
+- [ ] `read_code_rules` runs before the first edit. It loads `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/**` from the repo, plus the user’s taste file, plus saved `code_rule` pins for this user and this repo, and places that pack in shared task memory.
+- [ ] A coding agent can `write_memory` a `code_rule` pin mid-run: `scope=user` when the taste follows the person, `scope=codebase` when it belongs to that repository.
+- [ ] The next run loads those pins. A rule file beats a pin, and a pin beats a dream claim.
 - [ ] The reviewer checks the diff against the code-rule pack loaded for the run.
-- [ ] User memory can store a preference that applies across that user’s repositories.
-- [ ] The runtime retrieves a bounded memory pack instead of the full table.
-- [ ] The trajectory lists the memory ids inserted into the prompt.
-- [ ] A second task on the same repo uses a note from the first task, and the log shows that id.
+- [ ] A user pin applies across that user’s repositories. A codebase dream does not.
+- [ ] The trajectory lists the dream version and the ids inserted into the prompt.
+- [ ] A second task on the same repo uses a claim or pin from the first task, and the log shows that id.
+- [ ] A landed change is not described as still open after a dream that has seen the later episode.
 - [ ] A test proves an active global row is not returned.
-- [ ] **Stage 6 exit:** a second task reuses a stored codebase or episodic note, and the run log shows which note was used.
+- [ ] **Stage 6 exit:** a second task follows a preference or codebase fact from the first without it being restated, a completed fact is not treated as still current, and the run log shows the dream version or pin id that was used.
 
 ---
 
@@ -313,7 +325,7 @@ Start only after the stage 6 exit is checked. This is not training a new model.
 - Every completed run already has a trajectory. Add versioned `reward_v1` from signals that exist before GitHub: tests passed, diff produced, tool-builder tool reused, tokens, latency. Pull request, CI, and merge scores are added in stage 8. They are omitted here, not faked.
 - The supervisor may only pick from the decision table in `prd.md` §19 (`model`, `topology`, `context_budget`, `tool_pack`, `memory_pack`, `stop_policy`, `test_policy`). `topology` may be `solo_coder`, `coder_tester_reviewer`, or `swarm`. A new decision key needs a protocol change, a default, logging, and an eval.
 - A policy version starts in **shadow** (choose and log, do not change behavior), then **canary**, then **active**. Promotion and rollback require the eval harness. Logging is not learning.
-- If a stage 6 memory was in the prompt and the run succeeded, that memory can gain retrieval credit. Credit does not turn global memory on.
+- If a stage 6 claim or episode was in the prompt and the run succeeded, that id can gain retrieval credit. Credit does not turn global memory on, and it does not rewrite the episode. The next dream is what drops a claim that keeps being useless.
 
 - [ ] `reward_v1` is stored on every completed trajectory. A completed run with no reward is a bug.
 - [ ] Each run logs the decision keys it chose and the policy version that chose them.

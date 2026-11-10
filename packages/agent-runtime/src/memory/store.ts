@@ -11,7 +11,7 @@ export interface MemoryNote {
   createdAt: string;
 }
 
-/** Small persistent record store. An indexed Postgres backend can implement this interface later. */
+/** Pin store: explicit notes a future dream is not allowed to rewrite. Dream versions live in the design in `prd.md` §12 and are not implemented here. An indexed Postgres backend can replace this file later. */
 export class MemoryStore {
   constructor(private readonly path: string) {}
 

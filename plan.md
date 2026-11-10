@@ -1,7 +1,7 @@
 # Tourist — Build Plan
 
 > Working plan aligned with `prd.md` (esp. §§12, 18–21, 26, 36), `README.md`, and `cursor-strategy.md`.
-> Last synced for: structured learning, Global Memory gates, **City Foundation first**, and **Public Report → CitySnapshot**.
+> Last synced for: structured learning, Dreaming-style scoped memory (`prd.md` §12), Global Memory gates, **City Foundation first**, and **Public Report → CitySnapshot**.
 >
 > **Goal:** design the city early as the integration + reporting surface; run the solo agent loop in parallel until Gate A; then bind live agents, memory, multi-agent, and tools onto that world.
 
@@ -26,7 +26,8 @@
 | ------------------------------------ | ----------------------------------------------------------------------- |
 | Too many products at once            | Gates A–D; Track 0 is scoped to schema/viewer/reports first             |
 | Vague “RL”                           | §§18–21                                                                 |
-| Global memory pollution              | §12 + Gate B                                                            |
+| Global memory pollution              | Dreams stay inside one user or one repo; global still §12 + Gate B     |
+| Dream rewrite drift                  | New dream version only; episodes immutable; eval or keep the previous  |
 | City polish replacing agent quality  | Track 0 ≠ “live autonomous city”; Gate A still required for live claims |
 | Multi-agent / Tool Builder too early | Still blocked until Gates C / D                                         |
 
@@ -146,11 +147,13 @@ Discrete decision surface, mandatory trajectories, versioned `reward_v1`, policy
 
 
 
-## 5. Global Memory (summary of PRD §12)
+## 5. Memory (summary of PRD §12)
 
-Default deny → sanitize → candidate → multi-repo promote → budgeted retrieve → demote. Agents never write `scope=global, status=active`. Active retrieval off until Gate B.
+Four layers. Sources and episodes are immutable. Pins are explicit notes and code rules; the dream is not allowed to rewrite them. A background dream writes a new summary version per user and per repository, and that version is what the next run loads only if the memory eval is not worse (carry a fact forward, follow a preference, stay current, cite evidence, stay in scope). The previous version stays, so a bad dream can be dropped.
 
-Code rules are specified on the checkpoint board (Stage 6). Every run reads repo rule files (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/**`) and the user’s taste file before editing. Taste learned while coding is saved as a `code_rule` memory on the user or on that repository, and loaded on the next run. A file wins over a memory.
+Global memory is not a dream. Default deny → sanitize → candidate → multi-repo promote → budgeted retrieve → demote. Agents never write `scope=global, status=active`. A dream cannot either. Active global retrieval stays off until Gate B.
+
+Code rules are specified on the checkpoint board (Stage 6). Every run reads repo rule files (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/**`) and the user’s taste file before editing. Taste learned while coding is saved as a `code_rule` pin on the user or on that repository, and loaded on the next run. A file wins over a pin, and a pin wins over a dream claim.
 
 ---
 
@@ -168,7 +171,7 @@ Code rules are specified on the checkpoint board (Stage 6). Every run reads repo
 4. One agent before many
 5. Living-city polish pauses if Gate A regresses; report/snapshot path should keep working
 6. Context Engine: discover, don’t dump
-7. Global Memory default deny
+7. Dreams stay in scope; Global Memory default deny
 
 
 
@@ -217,7 +220,7 @@ Merge:    real run → ReportComposer → same WorldGenerator → shareable city
 | `feat/phase-1b-trajectories`   | Trajectory + `reward_v1`                      | 100% runs scored            |
 | `feat/phase-1-gate-a`          | Eval + report bridge from real runs           | **Gate A green**            |
 | `feat/phase-2-indexing`        | Context Engine                                | Search tools work           |
-| `feat/phase-2-memory`          | User / codebase / episodic                    | Reuse on second task        |
+| `feat/phase-2-memory`          | Pins, episodes, versioned dreams              | Second task reuses a fact   |
 | `feat/phase-2b-global-memory`  | Graduation pipeline                           | **Gate B**                  |
 | `feat/phase-3-living-city`     | Live pawns/animations on Track 0              | Live run readable in city   |
 | `feat/phase-4-multi-agent`     | Topologies                                    | **Gate C**                  |
@@ -261,7 +264,7 @@ GitHub, BYOK, Daytona, solo tools, PR, events shaped for world schema, trajector
 
 ### Phase 2 — Indexing + scoped memory
 
-Richer layout inputs; memory tools; Gate B before active global.
+Richer layout inputs; pins, episodes, and dream versions with the memory eval; Gate B before active global.
 
 ### Phase 3 — Living city
 
@@ -301,7 +304,7 @@ Multi-agent (C), tools (D), bandits/retrieval learning — as in `prd.md` §36.
 | Gate A     | Solo eval success + real PR loop + real run mints report→city              |
 | 1b         | % runs with complete trajectory + reward                                   |
 | 2          | Tokens/successful PR ↓ without success ↓                                   |
-| Gate B     | Global playbook precision; no secret leaks in memory                       |
+| Gate B     | Dream eval holds; global playbook precision; no secret leaks in memory     |
 | MVP 3      | Live run understandable from city without raw logs                         |
 | Gate C / 4 | Simple-task cost ≈ solo baseline                                           |
 | Gate D / 5 | Reused tools with +reward; Workshop landmark updates                       |
@@ -336,7 +339,7 @@ Multi-agent (C), tools (D), bandits/retrieval learning — as in `prd.md` §36.
 | Vision                           | `README.md`          |
 | Architecture                     | `prd.md`             |
 | City + PublicReport→CitySnapshot | `prd.md` §26         |
-| Global Memory                    | `prd.md` §12         |
+| Memory (pins, episodes, dreams, global) | `prd.md` §12  |
 | Learning                         | `prd.md` §§18–21     |
 | Track 0 + Gates A–D              | `prd.md` §36         |
 | Context discovery                | `cursor-strategy.md` |
