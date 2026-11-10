@@ -6,7 +6,7 @@ The runtime has a provider-neutral model router, a typed local tool registry, an
 - `coder_tester_reviewer`: sequential specialists with shared task memory and one review return to the coder.
 - `swarm`: opt-in disjoint file assignments in parallel Git worktrees, followed by one integration branch and tests.
 
-`runTask` selects among them. A swarm requires two to four explicit file assignments; a single file task remains solo or sequential. A failed integrated test returns once to the owner identified by a file name or `testHints` in the failure output. If ownership is ambiguous, the run stops for review. Stage 6 persistent memory and Stage 8 live GitHub delivery are not implemented. The GitHub tools record intended calls only.
+`runTask` selects among them. A swarm requires two to four explicit file assignments; a single file task remains solo or sequential. A failed integrated test returns once to the owner identified by a file name or `testHints` in the failure output. If ownership is ambiguous, the run stops for review. Stage 6 persistent memory is specified as pins, append-only episodes, and versioned dreams (`prd.md` §12). This package only has the pin file used by the CLI. Stage 8 live GitHub delivery is not implemented. The GitHub tools record intended calls only.
 
 ## Models and keys
 

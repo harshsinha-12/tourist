@@ -51,10 +51,10 @@ But execution is only one part of the system.
 
 Tourist is designed around several persistent capabilities:
 
-* **User Memory** - remembers how a developer prefers to work across projects.
-* **Codebase Memory** - learns repository architecture, conventions, previous changes, decisions, discussions, bugs, and historical agent interactions.
-* **Global Memory** - stores reusable engineering knowledge and successful patterns that can generalize across tasks.
-* **Episodic Memory** - preserves previous attempts, failures, fixes, and outcomes.
+* **Pins** - explicit preferences, instructions, and code rules the background dream is not allowed to rewrite.
+* **Episodes** - one immutable record per finished task: what was tried, what failed, and whether it landed.
+* **Dreams** - a short, current summary per developer and per repository, rewritten as a new version and kept only when it still recalls facts, follows preferences, and drops stale work.
+* **Global Memory** - reusable engineering patterns that graduate across repositories only after sanitizing and multi-repo evidence. A dream cannot publish one.
 * **Dynamic Context Discovery** - retrieves only the code, memories, tools, and historical information relevant to the current task instead of flooding the model context.
 * **Multi-Agent Engineering** - dynamically coordinates planners, coders, researchers, testers, reviewers, integration agents, and tool-building agents when useful.
 * **Self-Created Tools** - allows agents to detect missing capabilities, build and test tools inside sandboxes, register them, and reuse successful tools later.
@@ -237,81 +237,54 @@ Raises PR
 
 ## 2. Persistent memory
 
-The system should not treat every task as a blank slate.
+The system should not treat every task as a blank slate, and it should not keep a growing list of notes that go stale.
 
-Memory is divided into several scopes.
+Finished runs append an episode and leave it alone. A background dream reads new episodes, the previous summary, explicit pins, and the clock, then writes a **new** summary. The next task loads that summary only when it still carries facts forward, follows preferences, and treats finished work as finished. The previous summary is kept so a worse rewrite can be discarded. Detail that does not fit in the summary stays on the episode and is fetched on demand.
 
-### User Memory
+The same summary is never shared across repositories. Cross-repo playbooks go through a separate graduation gate.
 
-Knowledge specific to the developer.
+### Pins
 
-Examples:
+Explicit and durable. The dream cannot rewrite them. Rule files in the repo win when they disagree.
 
 ```text
-prefers TypeScript
-uses pnpm
 prefers smaller PRs
-likes concise abstractions
-usually uses FastAPI for Python services
+uses pnpm unless the repo already uses something else
+do not introduce a new web framework
 ```
 
-### Codebase Memory
+### Episodes
 
-Knowledge specific to a repository.
-
-Examples:
-
-```text
-repository architecture
-module responsibilities
-coding conventions
-important symbols
-dependency relationships
-historical fixes
-architectural decisions
-past PR discussions
-previous agent conversations
-known fragile areas
-```
-
-### Global Memory
-
-Reusable knowledge learned across tasks and repositories.
-
-Examples:
-
-```text
-debugging patterns
-framework behaviour
-successful repair strategies
-general tool-selection patterns
-reusable engineering knowledge
-```
-
-### Episodic / Task Memory
-
-What happened during previous attempts.
+What happened on one task. Append-only.
 
 ```text
 attempt 1 failed because...
 tests exposed...
 approach 2 succeeded...
-user rejected...
 PR was merged...
 ```
 
-### Procedural / Tool Memory
+### Dreams
 
-Knowledge about **how to perform tasks**.
+The current picture for one developer, and a separate current picture for one repository.
 
 ```text
-For Prisma migration drift,
-use schema-diff-tool.
+HTTP handlers validate with zod at the boundary
+auth migration landed on 2026-10-02; do not restart it
+cache tests flake when the suite shares one Redis
 ```
 
-### Shared Task Memory
+### Global memory
 
-Temporary shared knowledge between multiple agents working on the same task.
+Reusable patterns across repositories, after sanitizing and evidence from more than one repo. Not a dream.
+
+```text
+when a React timer test flakes, isolate the timer before rewriting the assertion
+```
+
+### Shared task memory
+
+Temporary notes between agents on the same task. They die with the run, except for the episode written at the end.
 
 ---
 
@@ -977,10 +950,8 @@ Add:
 * Tree-sitter parsing
 * symbol intelligence
 * hybrid search
-* user memory
-* codebase memory
-* episodic memory
-* old task retrieval
+* pins, append-only episodes, and versioned dreams
+* old task retrieval on demand
 * dynamic context discovery
 
 ---
@@ -1087,9 +1058,8 @@ This project takes inspiration from that interaction model and explores a broade
 
 * persistent cloud execution
 * OpenAI-based BYOK agents
-* long-term user memory
-* long-term codebase memory
-* global and episodic memory
+* pins, per-user and per-repo dreams, and append-only episodes
+* global memory only after a graduation gate
 * dynamic context discovery
 * multi-agent engineering
 * self-created tools

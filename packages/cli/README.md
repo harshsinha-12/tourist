@@ -28,7 +28,7 @@ tourist memory list --repo .
 
 Cloud runs require `TOURIST_CLOUD_URL` and `TOURIST_CLOUD_TOKEN` plus a provider key. Use a public `owner/repo` name. The cloud API runs the same agent in a disposable sandbox. `tourist status <id> --cloud <url>` checks a run; `--detach` returns its ID immediately. Cloud execution requires a deployed Tourist API and `DAYTONA_API_KEY` there. The web run viewer also needs `TOURIST_WEB_VIEW_TOKEN` set on the web server. Its viewer token is entered in the page and is never placed in a public environment variable.
 
-Scoped notes are stored in `~/.tourist/memory.json` locally, or `TOURIST_MEMORY_FILE` if set. Tourist Cloud keeps its own memory store under `/data` and combines it with notes sent by the CLI. Retrieval currently uses bounded keyword matching. Cloud runs log a versioned heuristic decision and `reward_v1` signals; automatic policy learning and promotion are future work.
+Explicit notes (pins) are stored in `~/.tourist/memory.json` locally, or `TOURIST_MEMORY_FILE` if set. Tourist Cloud keeps its own pin store under `/data` and combines it with notes sent by the CLI. Retrieval currently uses bounded keyword matching. Versioned dreams over append-only episodes are specified in `prd.md` and are not implemented in this store. Cloud runs log a versioned heuristic decision and `reward_v1` signals; automatic policy learning and promotion are future work.
 
 ## Parallel swarm run
 
